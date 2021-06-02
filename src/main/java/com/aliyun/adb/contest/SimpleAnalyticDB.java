@@ -2,84 +2,69 @@ package com.aliyun.adb.contest;
 
 import com.aliyun.adb.contest.spi.AnalyticDB;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class SimpleAnalyticDB implements AnalyticDB {
 
-    private final Map<String, List<Long>> data = new HashMap<String, List<Long>>();
+    public static boolean TIME_OUT = false;
+    private MyFileReader[] myFileReaders;
 
     /**
-     *
      * The implementation must contain a public no-argument constructor.
-     *
      */
     public SimpleAnalyticDB() {
     }
 
     @Override
     public void load(String tpchDataFileDir, String workspaceDir) throws Exception {
-        File dir = new File(tpchDataFileDir);
-
-        for (File dataFile : dir.listFiles()) {
-            System.out.println("Start loading table " + dataFile.getName());
-
-            // You can write data to workspaceDir
-            File yourDataFile = new File(workspaceDir, dataFile.getName());
-            yourDataFile.createNewFile();
-
-            loadInMemroy(dataFile);
-        }
-
+        long t = System.currentTimeMillis();
+        MyFilePage.WORK_DIR = Paths.get(workspaceDir);
+        Path dirPath = Paths.get(tpchDataFileDir);
+        Files.list(dirPath).forEach(path -> {
+            if (path.getFileName().toString().equals("results")) {
+                // 跳过结果数据
+                return;
+            }
+            myFileReaders = new MyFileReader[Constant.THREAD_COUNT];
+            for (int i = 0; i < Constant.THREAD_COUNT; i++) {
+                myFileReaders[i] = new MyFileReader(path, i, Constant.THREAD_COUNT, 64 * 1024 * 1024, Constant.PAGE_COUNT);
+            }
+            for (int i = 0; i < Constant.THREAD_COUNT; i++) {
+                if (i < Constant.THREAD_COUNT - 1) {
+                    myFileReaders[i].nextMyFileReader = myFileReaders[i + 1];
+                }
+                myFileReaders[i].start();
+            }
+            for (int i = 0; i < Constant.THREAD_COUNT; i++) {
+                try {
+                    myFileReaders[i].join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        System.out.println("COST TIME : " + (System.currentTimeMillis() - t));
+        // 测试可能命中的所有page下标
+//        for (int i = 0; i < 101; i++) {
+//            MyPageManager.find(MyPageManager.tableColumnKeys[0], 0.01 * i, myFileReaders);
+//        }
+//        for (int i = 0; i < 101; i++) {
+//            MyPageManager.find(MyPageManager.tableColumnKeys[1], 0.01 * i, myFileReaders);
+//        }
     }
+
+    private int quantileCount = 0;
 
     @Override
-    public String quantile(String table, String column, double percentile) throws Exception {
-
-        List<Long> values = data.get(tableColumnKey(table, column));
-
-        if (values == null) {
-            throw new IllegalArgumentException();
-        }
-
-        int rank = (int) Math.round(values.size() * percentile);
-        String ans = values.get(rank-1).toString();
-
-        System.out.println("Query:" + table + ", " + column + ", " + percentile + " Answer:" + rank + ", " + ans);
-
+    public String quantile(String table, String column, double percentile) {
+//        if (quantileCount++ > 8) {
+//            return "";
+//        }
+        String ans = String.valueOf(MyPageManager.find(column, percentile, myFileReaders));
+        System.out.println("Query:" + table + ", " + column + ", " + percentile + " Answer:" + ans);
         return ans;
-    }
-
-    private void loadInMemroy(File dataFile) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(dataFile));
-        String table = dataFile.getName();
-        String[] columns = reader.readLine().split(",");
-
-        for (String column : columns) {
-            data.put(tableColumnKey(table, column), new ArrayList<Long>());
-        }
-
-        String rawRow;
-        while ((rawRow = reader.readLine()) != null) {
-            String[] row = rawRow.split(",");
-
-            for (int i = 0; i < columns.length; i++) {
-                data.get(tableColumnKey(table, columns[i])).add(Long.parseLong(row[i]));
-            }
-        }
-
-        data.forEach((tableColumn, values) -> {
-            values.sort(Long::compareTo);
-            System.out.println("Finish loading column " + tableColumn);
-        });
-
-    }
-
-    private String tableColumnKey(String table, String column) {
-        return (table + "." + column).toLowerCase();
     }
 
 }
