@@ -1,7 +1,7 @@
 package com.aliyun.adb.contest;
 
 
-import com.aliyun.adb.contest.cache.MyBufferCache;
+import com.aliyun.adb.contest.cache.MyBlockingQueueCache;
 import com.aliyun.adb.contest.cache.MyCache;
 
 import java.io.IOException;
@@ -31,7 +31,7 @@ public class MyFileReader extends Thread {
         this.bufferSize = bufferSize;
         this.pageCount = pageCount;
         this.notLastThread = threadIndex != threadCount - 1;
-        myCache = new MyBufferCache();
+        myCache = new MyBlockingQueueCache();
         try {
             channel = FileChannel.open(path);
             fileSize = channel.size();
