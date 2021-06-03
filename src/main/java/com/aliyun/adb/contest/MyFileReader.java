@@ -63,7 +63,7 @@ public class MyFileReader extends Thread {
                     end = fileSize - 1;
                 }
                 MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, start, end - start + 1);
-                myCache.put(buffer);
+                myCache.put(buffer.load());
             }
             channel.close();
         } catch (Exception e) {
