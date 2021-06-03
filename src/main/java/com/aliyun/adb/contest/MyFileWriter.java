@@ -3,11 +3,10 @@ package com.aliyun.adb.contest;
 
 import com.aliyun.adb.contest.page.MyMemoryPage;
 import com.aliyun.adb.contest.page.MyPage;
-
-import java.nio.MappedByteBuffer;
-
 import sun.misc.Cleaner;
 import sun.nio.ch.DirectBuffer;
+
+import java.nio.MappedByteBuffer;
 
 public class MyFileWriter extends Thread {
 
@@ -75,18 +74,25 @@ public class MyFileWriter extends Thread {
     // PAGE_COUNT = 1000 的偷鸡做法 不使用MyFakePage和isFake标记
     private void putLongs(long[] input) {
         int index1 = getIndex(input[0]);
-        int index2 = getIndex(input[1]);
-        int indexMod1 = index1 % 10;
-        int indexMod2 = index2 % 10;
-        if (indexMod1 == 9 || index1 == 0){
-            pages[0][index1].add(input[0]);
-        }else {
-            pages[0][index1].size++;
+        if (index1 != 0) {
+            if (index1 % 10 != 9) {
+                pages[0][index1].size++;
+            } else {
+                pages[0][index1].add(input[0]);
+            }
+        } else {
+            pages[0][index1].setMinValue(input[0]);
         }
-        if (indexMod2 == 9 || indexMod2 == 0){
-            pages[1][index2].add(input[1]);
-        }else {
-            pages[1][index2].size++;
+
+        int index2 = getIndex(input[1]);
+        if (index2 != 0) {
+            if (index2 % 10 != 9) {
+                pages[1][index2].size++;
+            } else {
+                pages[1][index2].add(input[1]);
+            }
+        } else {
+            pages[1][index2].setMinValue(input[1]);
         }
     }
 
@@ -109,15 +115,15 @@ public class MyFileWriter extends Thread {
     private int inputIndex = 0;
 
     private void handleByte(byte b) {
-        if (b == 44) {
+        if (b >= 48) {
+            inputs[inputIndex] = inputs[inputIndex] * 10 + b - 48;
+        } else if (b == 44) {
             inputIndex = (inputIndex + 1) % 2;
-        } else if (b == 10) {
+        } else {
             putLongs(inputs);
             inputIndex = 0;
             inputs[0] = 0;
             inputs[1] = 0;
-        } else {
-            inputs[inputIndex] = inputs[inputIndex] * 10 + b - 48;
         }
     }
 

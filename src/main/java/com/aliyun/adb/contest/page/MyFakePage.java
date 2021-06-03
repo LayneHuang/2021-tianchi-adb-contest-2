@@ -14,6 +14,10 @@ public class MyFakePage extends MyPage{
     }
 
     @Override
+    public void setMinValue(long value) {
+    }
+
+    @Override
     public long find(int index) {
         return 0;
     }

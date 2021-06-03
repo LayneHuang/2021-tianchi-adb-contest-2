@@ -14,9 +14,13 @@ public abstract class MyPage {
 
     public long endValue;
 
+    public long minValue = -1;
+
     public boolean isFake;
 
     public abstract void add(long value);
+
+    public abstract void setMinValue(long value);
 
     public abstract long find(int index);
 

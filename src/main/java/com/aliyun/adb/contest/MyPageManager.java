@@ -22,7 +22,10 @@ public class MyPageManager {
         long[] sortedArrays = new long[size];
         int addIndex = 0;
         for (int i = 0; i < Constant.THREAD_COUNT; i++) {
-            long[] values = myFileWriters[i].pages[colIndex][pageIndex].getValues();
+            MyPage myPage = myFileWriters[i].pages[colIndex][pageIndex];
+            // TODO 这个对吗...
+            if (myPage.minValue > 0) return myPage.minValue;
+            long[] values = myPage.getValues();
             for (long value : values) {
                 sortedArrays[addIndex++] = value;
             }

@@ -41,6 +41,10 @@ public class MyFilePage extends MyPage {
     }
 
     @Override
+    public void setMinValue(long value) {
+    }
+
+    @Override
     public long find(int index) {
         try {
             if (fileChannel.isOpen()) {

@@ -12,7 +12,7 @@ import java.util.List;
  * @Date 2021/5/25 21:08
  * @Created by FinkyS
  */
-public class MyMemoryPage extends MyPage{
+public class MyMemoryPage extends MyPage {
 
     public List<long[]> arraysList = new ArrayList<>();
     public long[] sortedArrays;
@@ -25,7 +25,7 @@ public class MyMemoryPage extends MyPage{
 //            size++;
 //            return;
 //        }
-        if (currentArrays == null){
+        if (currentArrays == null) {
             currentArrays = new long[Constant.ARRAY_LENGTH];
             arraysList.add(currentArrays);
         }
@@ -37,9 +37,14 @@ public class MyMemoryPage extends MyPage{
         }
     }
 
+    public void setMinValue(long value) {
+        if (value < minValue) minValue = value;
+        size++;
+    }
+
     @Override
     public long find(int index) {
-        if (sortedArrays == null){
+        if (sortedArrays == null) {
             sortedArrays = new long[size];
             int tempIndex = 0;
             for (long[] longs : arraysList) {
