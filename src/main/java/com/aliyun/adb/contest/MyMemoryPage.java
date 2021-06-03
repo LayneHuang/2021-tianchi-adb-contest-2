@@ -19,6 +19,10 @@ public class MyMemoryPage extends MyPage{
 
     @Override
     public void add(long value) {
+//        if (isFake){
+//            size++;
+//            return;
+//        }
         if (currentArrays == null){
             currentArrays = new long[Constant.ARRAY_LENGTH];
             arraysList.add(currentArrays);

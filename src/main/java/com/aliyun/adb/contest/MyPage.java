@@ -14,9 +14,7 @@ public abstract class MyPage {
 
     public long endValue;
 
-    public void fakeAdd(){
-        size++;
-    }
+    public boolean isFake;
 
     abstract void add(long value);
 

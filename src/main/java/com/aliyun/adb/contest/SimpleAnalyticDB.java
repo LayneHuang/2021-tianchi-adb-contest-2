@@ -29,7 +29,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
             }
             myFileReaders = new MyFileReader[Constant.THREAD_COUNT];
             for (int i = 0; i < Constant.THREAD_COUNT; i++) {
-                myFileReaders[i] = new MyFileReader(path, i, Constant.THREAD_COUNT, 64 * 1024 * 1024, Constant.PAGE_COUNT);
+                myFileReaders[i] = new MyFileReader(path, i, Constant.THREAD_COUNT, Constant.MAPPED_SIZE, Constant.PAGE_COUNT);
             }
             for (int i = 0; i < Constant.THREAD_COUNT; i++) {
                 if (i < Constant.THREAD_COUNT - 1) {
@@ -59,6 +59,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     @Override
     public String quantile(String table, String column, double percentile) {
+//        return "";
 //        if (quantileCount++ > 8) {
 //            return "";
 //        }

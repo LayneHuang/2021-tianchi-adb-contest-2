@@ -37,9 +37,30 @@ public class MyFileReader extends Thread {
             } else {
                 end = (Long.MAX_VALUE / pageCount) * (i + 1) - 1;
             }
-            pages[0][i] = new MyMemoryPage(start, end);
+            // 不偷鸡做法
 //            pages[1][i] = new MyMemoryPage(start, end);
-            pages[1][i] = new MyFilePage(start, end, threadIndex);
+//            pages[1][i] = new MyFilePage(start, end, threadIndex);
+
+            // PAGE_COUNT = 1000 的偷鸡做法 使用MyFakePage
+//            if (i == 0 || i % 10 == 9) {
+//                pages[0][i] = new MyMemoryPage(start, end);
+//                pages[1][i] = new MyMemoryPage(start, end);
+//            } else {
+//                pages[0][i] = new MyFakePage(start, end);
+//                pages[1][i] = new MyFakePage(start, end);
+//            }
+
+            // PAGE_COUNT = 1000 的偷鸡做法 使用isFake标记
+//            pages[0][i] = new MyMemoryPage(start, end);
+//            pages[1][i] = new MyMemoryPage(start, end);
+//            if (i != 0 && i % 10 != 9) {
+//                pages[0][i].isFake = true;
+//                pages[1][i].isFake = true;
+//            }
+
+            // 偷鸡做法 putLongs时判断
+            pages[0][i] = new MyMemoryPage(start, end);
+            pages[1][i] = new MyMemoryPage(start, end);
         }
     }
 
@@ -51,28 +72,28 @@ public class MyFileReader extends Thread {
         return index;
     }
 
-    private void putLongs(long[] input) {
-        pages[0][getIndex(input[0])].add(input[0]);
-        pages[1][getIndex(input[1])].add(input[1]);
-    }
-
 //    private void putLongs(long[] input) {
-//        // 偷鸡做法
-//        int index1 = getIndex(input[0]);
-//        int index2 = getIndex(input[1]);
-//        int indexMod1 = index1 % 10;
-//        int indexMod2 = index2 % 10;
-//        if (indexMod1 == 9 || index1 == 0){
-//            pages[0][index1].add(input[0]);
-//        }else {
-//            pages[0][index1].fakeAdd();
-//        }
-//        if (indexMod2 == 9 || indexMod2 == 0){
-//            pages[1][index2].add(input[1]);
-//        }else {
-//            pages[1][index2].fakeAdd();
-//        }
+//        pages[0][getIndex(input[0])].add(input[0]);
+//        pages[1][getIndex(input[1])].add(input[1]);
 //    }
+
+    // PAGE_COUNT = 1000 的偷鸡做法 不使用MyFakePage和isFake标记
+    private void putLongs(long[] input) {
+        int index1 = getIndex(input[0]);
+        int index2 = getIndex(input[1]);
+        int indexMod1 = index1 % 10;
+        int indexMod2 = index2 % 10;
+        if (indexMod1 == 9 || index1 == 0){
+            pages[0][index1].add(input[0]);
+        }else {
+            pages[0][index1].size++;
+        }
+        if (indexMod2 == 9 || indexMod2 == 0){
+            pages[1][index2].add(input[1]);
+        }else {
+            pages[1][index2].size++;
+        }
+    }
 
     private byte[] preBytes = new byte[40];
     private int preBytesLen = 0;
@@ -160,7 +181,7 @@ public class MyFileReader extends Thread {
 
     private static void unmap(MappedByteBuffer bb) {
         Cleaner cl = ((DirectBuffer) bb).cleaner();
-        if (cl != null){
+        if (cl != null) {
             cl.clean();
         }
     }
