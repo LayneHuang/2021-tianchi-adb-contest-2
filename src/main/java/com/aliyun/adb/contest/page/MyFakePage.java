@@ -1,4 +1,4 @@
-package com.aliyun.adb.contest;
+package com.aliyun.adb.contest.page;
 
 /**
  * @Classname Constant
@@ -14,12 +14,12 @@ public class MyFakePage extends MyPage{
     }
 
     @Override
-    long find(int index) {
+    public long find(int index) {
         return 0;
     }
 
     @Override
-    long[] getValues() {
+    public long[] getValues() {
         return new long[size];
     }
 

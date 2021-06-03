@@ -1,4 +1,4 @@
-package com.aliyun.adb.contest;
+package com.aliyun.adb.contest.page;
 
 /**
  * @Classname Constant
@@ -16,10 +16,10 @@ public abstract class MyPage {
 
     public boolean isFake;
 
-    abstract void add(long value);
+    public abstract void add(long value);
 
-    abstract long find(int index);
+    public abstract long find(int index);
 
-    abstract long[] getValues();
+    public abstract long[] getValues();
 
 }

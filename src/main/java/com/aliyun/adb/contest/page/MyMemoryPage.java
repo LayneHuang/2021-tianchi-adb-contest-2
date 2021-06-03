@@ -1,4 +1,6 @@
-package com.aliyun.adb.contest;
+package com.aliyun.adb.contest.page;
+
+import com.aliyun.adb.contest.Constant;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +38,7 @@ public class MyMemoryPage extends MyPage{
     }
 
     @Override
-    long find(int index) {
+    public long find(int index) {
         if (sortedArrays == null){
             sortedArrays = new long[size];
             int tempIndex = 0;
@@ -51,7 +53,7 @@ public class MyMemoryPage extends MyPage{
     }
 
     @Override
-    long[] getValues() {
+    public long[] getValues() {
         long[] values = new long[size];
         int tempIndex = 0;
         for (long[] longs : arraysList) {

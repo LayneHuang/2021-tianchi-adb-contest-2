@@ -1,13 +1,13 @@
-package com.aliyun.adb.contest;
+package com.aliyun.adb.contest.page;
+
+import com.aliyun.adb.contest.Constant;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * @Classname Constant
@@ -41,7 +41,7 @@ public class MyFilePage extends MyPage {
     }
 
     @Override
-    long find(int index) {
+    public long find(int index) {
         try {
             if (fileChannel.isOpen()) {
                 close();
@@ -67,7 +67,7 @@ public class MyFilePage extends MyPage {
     }
 
     @Override
-    long[] getValues() {
+    public long[] getValues() {
         long[] values = new long[size];
         try {
             if (fileChannel.isOpen()) {

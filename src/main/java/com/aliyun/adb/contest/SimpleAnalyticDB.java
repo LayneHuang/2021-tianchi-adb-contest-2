@@ -1,5 +1,6 @@
 package com.aliyun.adb.contest;
 
+import com.aliyun.adb.contest.page.MyFilePage;
 import com.aliyun.adb.contest.spi.AnalyticDB;
 
 import java.nio.file.Files;
@@ -10,6 +11,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     public static boolean TIME_OUT = false;
     private MyFileReader[] myFileReaders;
+    private MyFileWriter[] myFileWriters;
 
     /**
      * The implementation must contain a public no-argument constructor.
@@ -28,18 +30,22 @@ public class SimpleAnalyticDB implements AnalyticDB {
                 return;
             }
             myFileReaders = new MyFileReader[Constant.THREAD_COUNT];
+            myFileWriters = new MyFileWriter[Constant.THREAD_COUNT];
             for (int i = 0; i < Constant.THREAD_COUNT; i++) {
                 myFileReaders[i] = new MyFileReader(path, i, Constant.THREAD_COUNT, Constant.MAPPED_SIZE, Constant.PAGE_COUNT);
+                myFileWriters[i] = new MyFileWriter(myFileReaders[i]);
             }
             for (int i = 0; i < Constant.THREAD_COUNT; i++) {
                 if (i < Constant.THREAD_COUNT - 1) {
-                    myFileReaders[i].nextMyFileReader = myFileReaders[i + 1];
+                    myFileWriters[i].nextMyFileWriter = myFileWriters[i + 1];
                 }
                 myFileReaders[i].start();
+                myFileWriters[i].start();
             }
             for (int i = 0; i < Constant.THREAD_COUNT; i++) {
                 try {
                     myFileReaders[i].join();
+                    myFileWriters[i].join();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -60,10 +66,10 @@ public class SimpleAnalyticDB implements AnalyticDB {
     @Override
     public String quantile(String table, String column, double percentile) {
 //        return "";
-//        if (quantileCount++ > 8) {
-//            return "";
-//        }
-        String ans = String.valueOf(MyPageManager.find(column, percentile, myFileReaders));
+        if (quantileCount++ > 8) {
+            return "";
+        }
+        String ans = String.valueOf(MyPageManager.find(column, percentile, myFileWriters));
         System.out.println("Query:" + table + ", " + column + ", " + percentile + " Answer:" + ans);
         return ans;
     }
