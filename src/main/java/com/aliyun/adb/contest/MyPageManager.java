@@ -15,23 +15,29 @@ public class MyPageManager {
     public static String[] tableColumnKeys = {"L_ORDERKEY", "L_PARTKEY"};
 
     private static long getValue(MyFileWriter[] myFileWriters, int pageIndex, int colIndex, int insideIndex) {
-        int size = 0;
-        for (int i = 0; i < Constant.THREAD_COUNT; i++) {
-            size += myFileWriters[i].pages[colIndex][pageIndex].size;
-        }
-        long[] sortedArrays = new long[size];
-        int addIndex = 0;
-        for (int i = 0; i < Constant.THREAD_COUNT; i++) {
-            MyPage myPage = myFileWriters[i].pages[colIndex][pageIndex];
-            // TODO 这个对吗...
-            if (myPage.minValue > 0) return myPage.minValue;
-            long[] values = myPage.getValues();
-            for (long value : values) {
-                sortedArrays[addIndex++] = value;
+        if (pageIndex != 0) {
+            int size = 0;
+            for (int i = 0; i < Constant.THREAD_COUNT; i++) {
+                size += myFileWriters[i].pages[colIndex][pageIndex].size;
             }
+            long[] sortedArrays = new long[size];
+            int addIndex = 0;
+            for (int i = 0; i < Constant.THREAD_COUNT; i++) {
+                long[] values = myFileWriters[i].pages[colIndex][pageIndex].getValues();
+                for (long value : values) {
+                    sortedArrays[addIndex++] = value;
+                }
+            }
+            Arrays.parallelSort(sortedArrays);
+            return sortedArrays[insideIndex];
+        } else {
+            long min = Long.MAX_VALUE;
+            for (int i = 0; i < Constant.THREAD_COUNT; i++) {
+                MyPage myPage = myFileWriters[i].pages[colIndex][pageIndex];
+                if (myPage.minValue < min) min = myPage.minValue;
+            }
+            return min;
         }
-        Arrays.parallelSort(sortedArrays);
-        return sortedArrays[insideIndex];
     }
 
     public static long find(String column, double percentile, MyFileWriter[] myFileWriters) {
