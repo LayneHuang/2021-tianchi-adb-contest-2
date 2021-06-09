@@ -2,9 +2,7 @@ package com.aliyun.adb.contest.page;
 
 import com.aliyun.adb.contest.Constant;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * @Classname Constant
@@ -14,27 +12,20 @@ import java.util.List;
  */
 public final class MyMemoryPage extends MyPage {
 
-    public List<long[]> arraysList = new ArrayList<>();
-    public long[] sortedArrays;
-    public long[] currentArrays;
-    public int index;
+    public long[] arraysList;
+    private boolean firstRead;
 
     @Override
     public void add(long value) {
-//        if (isFake){
-//            size++;
-//            return;
-//        }
-        if (currentArrays == null) {
-            currentArrays = new long[Constant.ARRAY_LENGTH];
-            arraysList.add(currentArrays);
+        if (arraysList == null) {
+            arraysList = new long[Constant.ARRAY_LENGTH];
+        } else if (size >= arraysList.length) {
+            arraysList = Arrays.copyOf(
+                    arraysList,
+                    arraysList.length + (arraysList.length >> 1)
+            );
         }
-        currentArrays[index++] = value;
-        size++;
-        if (index == Constant.ARRAY_LENGTH - 1) {
-            currentArrays = null;
-            index = 0;
-        }
+        arraysList[size++] = value;
     }
 
     public void setMinValue(long value) {
@@ -44,29 +35,18 @@ public final class MyMemoryPage extends MyPage {
 
     @Override
     public long find(int index) {
-        if (sortedArrays == null) {
-            sortedArrays = new long[size];
-            int tempIndex = 0;
-            for (long[] longs : arraysList) {
-                for (int i = 0; i < longs.length && tempIndex < size; i++) {
-                    sortedArrays[tempIndex++] = longs[i];
-                }
-            }
-            Arrays.parallelSort(sortedArrays);
-        }
-        return sortedArrays[index];
+        return 0;
     }
 
     @Override
     public long[] getValues() {
-        long[] values = new long[size];
-        int tempIndex = 0;
-        for (long[] longs : arraysList) {
-            for (int i = 0; i < longs.length && tempIndex < size; i++) {
-                values[tempIndex++] = longs[i];
-            }
+        if (!firstRead) {
+            firstRead = true;
+            long[] result = new long[size];
+            if (size >= 0) System.arraycopy(arraysList, 0, result, 0, size);
+            arraysList = result;
         }
-        return values;
+        return arraysList;
     }
 
     public MyMemoryPage(long startValue, long endValue) {
