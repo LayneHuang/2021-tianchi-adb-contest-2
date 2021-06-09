@@ -47,18 +47,12 @@ public final class MyFileWriter extends Thread {
         return index;
     }
 
-    // PAGE_COUNT = 1000 的偷鸡做法 不使用MyFakePage和isFake标记
     private void putLongs() {
-        int index = getIndex(input);
-        if (index != 0) {
-            if (index % 10 != 9) {
-                pages[inputIndex][index].size++;
-            } else {
-                pages[inputIndex][index].add(input);
-            }
-        } else {
-            pages[inputIndex][index].setMinValue(input);
+        if (input == 0) {
+            return;
         }
+        int index = getIndex(input);
+        pages[inputIndex][index].add(input);
     }
 
     private final byte[] preBytes = new byte[40];
@@ -118,7 +112,7 @@ public final class MyFileWriter extends Thread {
                 unmap(buffer);
             }
             flush();
-            System.out.println(threadIndex + " " + (System.currentTimeMillis() - t));
+            System.out.println("Thread(" + threadIndex + ") cost: (" + (System.currentTimeMillis() - t) + ")ms");
         } catch (Exception e) {
             e.printStackTrace();
         }

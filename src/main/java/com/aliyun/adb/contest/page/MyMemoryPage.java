@@ -43,7 +43,7 @@ public final class MyMemoryPage extends MyPage {
         if (!firstRead) {
             firstRead = true;
             long[] result = new long[size];
-            if (size >= 0) System.arraycopy(arrays, 0, result, 0, size);
+            if (size > 0 && arrays != null) System.arraycopy(arrays, 0, result, 0, size);
             arrays = result;
         }
         return arrays;
