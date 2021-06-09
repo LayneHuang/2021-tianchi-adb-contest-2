@@ -6,11 +6,11 @@ package com.aliyun.adb.contest;
  * @Date 2021/5/25 21:08
  * @Created by FinkyS
  */
-public class Constant {
+public final class Constant {
     // 数据量
     public static final int LINE_COUNT = 3_00_000_000;
     // 线程数
-    public static final int THREAD_COUNT = 4;
+    public static final int THREAD_COUNT = 5;
     // 每个线程的页数
     public static final int PAGE_COUNT = 1000;
     // 内存页每次申请的数组长度

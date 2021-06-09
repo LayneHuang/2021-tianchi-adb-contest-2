@@ -10,7 +10,7 @@ import java.util.Arrays;
  * @Date 2021/5/26 10:41
  * @Created by FinkyS
  */
-public class MyPageManager {
+public final class MyPageManager {
 
     public static String[] tableColumnKeys = {"L_ORDERKEY", "L_PARTKEY"};
 

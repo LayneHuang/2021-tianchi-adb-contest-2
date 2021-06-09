@@ -12,7 +12,7 @@ import java.util.List;
  * @Date 2021/5/25 21:08
  * @Created by FinkyS
  */
-public class MyMemoryPage extends MyPage {
+public final class MyMemoryPage extends MyPage {
 
     public List<long[]> arraysList = new ArrayList<>();
     public long[] sortedArrays;

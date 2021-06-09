@@ -8,12 +8,13 @@ import sun.nio.ch.DirectBuffer;
 
 import java.nio.MappedByteBuffer;
 
-public class MyFileWriter extends Thread {
+public final class MyFileWriter extends Thread {
 
-    private MyFileReader reader;
-    private int threadIndex;
-    private int pageCount;
-    private long currentBlockCount;
+    private final MyFileReader reader;
+    private final int threadIndex;
+    private final int pageCount;
+    private final long currentBlockCount;
+    private final long pageSize;
     public MyPage[][] pages;
 
     public MyFileWriter(MyFileReader reader) {
@@ -21,6 +22,7 @@ public class MyFileWriter extends Thread {
         this.threadIndex = reader.threadIndex;
         this.pageCount = reader.pageCount;
         this.currentBlockCount = reader.currentBlockCount;
+        this.pageSize = Long.MAX_VALUE / pageCount;
 
         pages = new MyPage[2][pageCount];
         for (int i = 0; i < pageCount; i++) {
@@ -59,7 +61,7 @@ public class MyFileWriter extends Thread {
     }
 
     private int getIndex(long value) {
-        int index = (int) (value / (Long.MAX_VALUE / pageCount));
+        int index = (int) (value / pageSize);
         if (index == pageCount) {
             index--;
         }
@@ -72,31 +74,31 @@ public class MyFileWriter extends Thread {
 //    }
 
     // PAGE_COUNT = 1000 的偷鸡做法 不使用MyFakePage和isFake标记
-    private void putLongs(long[] input) {
-        int index1 = getIndex(input[0]);
+    private void putLongs() {
+        int index1 = getIndex(input0);
         if (index1 != 0) {
             if (index1 % 10 != 9) {
                 pages[0][index1].size++;
             } else {
-                pages[0][index1].add(input[0]);
+                pages[0][index1].add(input0);
             }
         } else {
-            pages[0][index1].setMinValue(input[0]);
+            pages[0][index1].setMinValue(input0);
         }
 
-        int index2 = getIndex(input[1]);
+        int index2 = getIndex(input1);
         if (index2 != 0) {
             if (index2 % 10 != 9) {
                 pages[1][index2].size++;
             } else {
-                pages[1][index2].add(input[1]);
+                pages[1][index2].add(input1);
             }
         } else {
-            pages[1][index2].setMinValue(input[1]);
+            pages[1][index2].setMinValue(input1);
         }
     }
 
-    private byte[] preBytes = new byte[40];
+    private final byte[] preBytes = new byte[40];
     private int preBytesLen = 0;
     public MyFileWriter nextMyFileWriter;
 
@@ -107,23 +109,25 @@ public class MyFileWriter extends Thread {
             }
         }
         if (inputIndex != 0) {
-            putLongs(inputs);
+            putLongs();
         }
     }
 
-    private long[] inputs = {0L, 0L};
-    private int inputIndex = 0;
+    private long input0;
+    private long input1;
+    private byte inputIndex = 0;
 
     private void handleByte(byte b) {
         if (b >= 48) {
-            inputs[inputIndex] = inputs[inputIndex] * 10 + b - 48;
+            if (inputIndex == 0) input0 = input0 * 10 + b - 48;
+            else input1 = input1 * 10 + b - 48;
         } else if (b == 44) {
-            inputIndex = (inputIndex + 1) % 2;
+            inputIndex = 1;
         } else {
-            putLongs(inputs);
+            putLongs();
             inputIndex = 0;
-            inputs[0] = 0;
-            inputs[1] = 0;
+            input0 = 0;
+            input1 = 0;
         }
     }
 

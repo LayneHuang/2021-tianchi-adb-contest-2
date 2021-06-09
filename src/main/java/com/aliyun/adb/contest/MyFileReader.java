@@ -9,7 +9,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 
-public class MyFileReader extends Thread {
+public final class MyFileReader extends Thread {
 
     public Path path;
     public long bufferSize;

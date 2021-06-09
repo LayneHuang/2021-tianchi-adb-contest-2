@@ -15,7 +15,7 @@ import java.util.Arrays;
  * @Date 2021/5/25 21:08
  * @Created by FinkyS
  */
-public class MyFilePage extends MyPage {
+public final class MyFilePage extends MyPage {
 
     public static Path WORK_DIR;
 

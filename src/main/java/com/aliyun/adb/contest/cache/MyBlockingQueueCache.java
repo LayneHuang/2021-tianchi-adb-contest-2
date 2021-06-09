@@ -10,9 +10,9 @@ import java.util.concurrent.LinkedBlockingDeque;
  * @Date 2021/6/3 16:38
  * @Created by FinkyS
  */
-public class MyBlockingQueueCache extends MyCache {
+public final class MyBlockingQueueCache extends MyCache {
 
-    private BlockingQueue<MappedByteBuffer> bq = new LinkedBlockingDeque<>(2);
+    private final BlockingQueue<MappedByteBuffer> bq = new LinkedBlockingDeque<>(2);
 
     @Override
     public MappedByteBuffer poll() throws InterruptedException {
