@@ -33,27 +33,6 @@ public final class MyFileWriter extends Thread {
             } else {
                 end = (Long.MAX_VALUE / pageCount) * (i + 1) - 1;
             }
-            // 不偷鸡做法
-//            pages[1][i] = new MyMemoryPage(start, end);
-//            pages[1][i] = new MyFilePage(start, end, threadIndex);
-
-            // PAGE_COUNT = 1000 的偷鸡做法 使用MyFakePage
-//            if (i == 0 || i % 10 == 9) {
-//                pages[0][i] = new MyMemoryPage(start, end);
-//                pages[1][i] = new MyMemoryPage(start, end);
-//            } else {
-//                pages[0][i] = new MyFakePage(start, end);
-//                pages[1][i] = new MyFakePage(start, end);
-//            }
-
-            // PAGE_COUNT = 1000 的偷鸡做法 使用isFake标记
-//            pages[0][i] = new MyMemoryPage(start, end);
-//            pages[1][i] = new MyMemoryPage(start, end);
-//            if (i != 0 && i % 10 != 9) {
-//                pages[0][i].isFake = true;
-//                pages[1][i].isFake = true;
-//            }
-
             // 偷鸡做法 putLongs时判断
             pages[0][i] = new MyMemoryPage(start, end);
             pages[1][i] = new MyMemoryPage(start, end);
@@ -68,33 +47,17 @@ public final class MyFileWriter extends Thread {
         return index;
     }
 
-//    private void putLongs(long[] input) {
-//        pages[0][getIndex(input[0])].add(input[0]);
-//        pages[1][getIndex(input[1])].add(input[1]);
-//    }
-
     // PAGE_COUNT = 1000 的偷鸡做法 不使用MyFakePage和isFake标记
     private void putLongs() {
-        int index1 = getIndex(input0);
-        if (index1 != 0) {
-            if (index1 % 10 != 9) {
-                pages[0][index1].size++;
+        int index = getIndex(input);
+        if (index != 0) {
+            if (index % 10 != 9) {
+                pages[inputIndex][index].size++;
             } else {
-                pages[0][index1].add(input0);
+                pages[inputIndex][index].add(input);
             }
         } else {
-            pages[0][index1].setMinValue(input0);
-        }
-
-        int index2 = getIndex(input1);
-        if (index2 != 0) {
-            if (index2 % 10 != 9) {
-                pages[1][index2].size++;
-            } else {
-                pages[1][index2].add(input1);
-            }
-        } else {
-            pages[1][index2].setMinValue(input1);
+            pages[inputIndex][index].setMinValue(input);
         }
     }
 
@@ -113,21 +76,16 @@ public final class MyFileWriter extends Thread {
         }
     }
 
-    private long input0;
-    private long input1;
-    private byte inputIndex = 0;
+    private long input;
+    private int inputIndex = 0;
 
     private void handleByte(byte b) {
         if (b >= 48) {
-            if (inputIndex == 0) input0 = input0 * 10 + b - 48;
-            else input1 = input1 * 10 + b - 48;
-        } else if (b == 44) {
-            inputIndex = 1;
+            input = input * 10 + b - 48;
         } else {
             putLongs();
-            inputIndex = 0;
-            input0 = 0;
-            input1 = 0;
+            inputIndex = (b == 44) ? 1 : 0;
+            input = 0;
         }
     }
 

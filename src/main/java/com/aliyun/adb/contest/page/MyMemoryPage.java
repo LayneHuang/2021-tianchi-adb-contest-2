@@ -12,20 +12,20 @@ import java.util.Arrays;
  */
 public final class MyMemoryPage extends MyPage {
 
-    public long[] arraysList;
+    public long[] arrays;
     private boolean firstRead;
 
     @Override
     public void add(long value) {
-        if (arraysList == null) {
-            arraysList = new long[Constant.ARRAY_LENGTH];
-        } else if (size >= arraysList.length) {
-            arraysList = Arrays.copyOf(
-                    arraysList,
-                    arraysList.length + (arraysList.length >> 1)
+        if (arrays == null) {
+            arrays = new long[Constant.ARRAY_LENGTH];
+        } else if (size >= arrays.length) {
+            arrays = Arrays.copyOf(
+                    arrays,
+                    arrays.length + (arrays.length >> 1)
             );
         }
-        arraysList[size++] = value;
+        arrays[size++] = value;
     }
 
     public void setMinValue(long value) {
@@ -43,10 +43,10 @@ public final class MyMemoryPage extends MyPage {
         if (!firstRead) {
             firstRead = true;
             long[] result = new long[size];
-            if (size >= 0) System.arraycopy(arraysList, 0, result, 0, size);
-            arraysList = result;
+            if (size >= 0) System.arraycopy(arrays, 0, result, 0, size);
+            arrays = result;
         }
-        return arraysList;
+        return arrays;
     }
 
     public MyMemoryPage(long startValue, long endValue) {
