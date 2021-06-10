@@ -65,10 +65,9 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     @Override
     public String quantile(String table, String column, double percentile) {
-//        return "";
-//        if (quantileCount++ > 8) {
-//            return "";
-//        }
+        if (quantileCount++ > 8) {
+            return "";
+        }
         String ans = String.valueOf(MyPageManager.find(column, percentile, myFileWriters));
         System.out.println("Query:" + table + ", " + column + ", " + percentile + " Answer:" + ans);
         return ans;
