@@ -8,9 +8,9 @@ package com.aliyun.adb.contest;
  */
 public final class Constant {
     // 数据量
-    public static final int LINE_COUNT = 3_00_000_000;
+    public static final int LINE_COUNT = 10_000;
     // 线程数
-    public static final int THREAD_COUNT = 5;
+    public static final int THREAD_COUNT = 9;
     // 每个线程的页数
     public static final int PAGE_COUNT = 1000;
     // 内存页每次申请的数组长度
@@ -21,9 +21,9 @@ public final class Constant {
     public static final int MAPPED_SIZE = 16 * 1024 * 1024;
 
     public static void main(String[] args) {
-        long halfFile = (long)(WRITE_SIZE*THREAD_COUNT*PAGE_COUNT)+(ARRAY_LENGTH*PAGE_COUNT*THREAD_COUNT*8L);
-        long allFile = (WRITE_SIZE*THREAD_COUNT*PAGE_COUNT*2L);
-        System.out.println("内存硬盘各存一半时内存大概占用:"+halfFile/1024/1024.f+" MB");
-        System.out.println("纯硬盘存时内存大概占用:"+allFile/1024/1024.f+" MB");
+        long halfFile = (long) (WRITE_SIZE * THREAD_COUNT * PAGE_COUNT) + (ARRAY_LENGTH * PAGE_COUNT * THREAD_COUNT * 8L);
+        long allFile = (WRITE_SIZE * THREAD_COUNT * PAGE_COUNT * 2L);
+        System.out.println("内存硬盘各存一半时内存大概占用:" + halfFile / 1024 / 1024.f + " MB");
+        System.out.println("纯硬盘存时内存大概占用:" + allFile / 1024 / 1024.f + " MB");
     }
 }
