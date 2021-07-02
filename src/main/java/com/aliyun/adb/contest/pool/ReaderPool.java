@@ -1,6 +1,8 @@
 package com.aliyun.adb.contest.pool;
 
 import com.aliyun.adb.contest.Constant;
+import com.aliyun.adb.contest.page.MyBlock;
+import com.aliyun.adb.contest.page.MyTable;
 
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
@@ -12,19 +14,28 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 
 public class ReaderPool {
-    private final BlockingQueue<MappedByteBuffer> bq = new LinkedBlockingDeque<>(2);
+    private final BlockingQueue<MyBlock> bq = new LinkedBlockingDeque<>(16);
 
     private final ExecutorService executor = Executors.newFixedThreadPool(Constant.THREAD_COUNT);
 
-    public void readFile(Path path) {
+    public int readBlockCount = 0;
+
+    public MyTable start(final int tableIndex, Path path) {
         long fileSize = getFileSize(path);
         int blockCount = (int) (fileSize / Constant.MAPPED_SIZE)
                 + (fileSize % Constant.MAPPED_SIZE == 0 ? 0 : 1);
+        MyTable table = new MyTable(blockCount);
+        readBlockCount += blockCount;
         for (int i = 0; i < blockCount; i++) {
-            final long begin = (long) i * Constant.MAPPED_SIZE;
-            final long end = Math.min(fileSize - 1, begin + Constant.MAPPED_SIZE);
-            executor.execute(() -> readFileBlock(path, begin, end));
+            MyBlock block = new MyBlock();
+            block.tableIndex = tableIndex;
+            block.blockIndex = i;
+            block.begin = (long) i * Constant.MAPPED_SIZE;
+            block.end = Math.min(fileSize - 1, block.begin + Constant.MAPPED_SIZE);
+            table.blocks[i] = block;
+            executor.execute(() -> readFileBlock(path, block));
         }
+        return table;
     }
 
     public long getFileSize(Path path) {
@@ -36,21 +47,21 @@ public class ReaderPool {
         return 0;
     }
 
-    public void readFileBlock(Path path, long begin, long end) {
+    public void readFileBlock(Path path, MyBlock block) {
         try (FileChannel channel = FileChannel.open(path)) {
             MappedByteBuffer buffer = channel.map(
                     FileChannel.MapMode.READ_ONLY,
-                    begin,
-                    end - begin + 1
+                    block.begin,
+                    block.getSize()
             );
-
-            bq.put(buffer.load());
+            block.trans(buffer.load());
+            bq.put(block);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public MappedByteBuffer take() throws InterruptedException {
+    public MyBlock take() throws InterruptedException {
         return bq.take();
     }
 }

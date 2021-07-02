@@ -10,7 +10,7 @@ public final class Constant {
     // 数据量
     public static final int LINE_COUNT = 10_000;
     // 线程数
-    public static final int THREAD_COUNT = 9;
+    public static final int THREAD_COUNT = 5;
     // 每个线程的页数
     public static final int PAGE_COUNT = 1000;
     // 内存页每次申请的数组长度

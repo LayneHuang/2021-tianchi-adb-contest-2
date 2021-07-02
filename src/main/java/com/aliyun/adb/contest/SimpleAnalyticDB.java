@@ -8,8 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class SimpleAnalyticDB implements AnalyticDB {
-
-    public static boolean TIME_OUT = false;
     private MyFileReader[] myFileReaders;
     private MyFileWriter[] myFileWriters;
 
@@ -52,13 +50,6 @@ public class SimpleAnalyticDB implements AnalyticDB {
             }
         });
         System.out.println("COST TIME : " + (System.currentTimeMillis() - t));
-        // 测试可能命中的所有page下标
-//        for (int i = 0; i < 101; i++) {
-//            MyPageManager.find(MyPageManager.tableColumnKeys[0], 0.01 * i, myFileReaders);
-//        }
-//        for (int i = 0; i < 101; i++) {
-//            MyPageManager.find(MyPageManager.tableColumnKeys[1], 0.01 * i, myFileReaders);
-//        }
     }
 
     private int quantileCount = 0;
