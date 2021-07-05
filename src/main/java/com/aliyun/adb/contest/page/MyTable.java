@@ -3,7 +3,7 @@ package com.aliyun.adb.contest.page;
 public class MyTable {
     public int blockCount;
 
-    public TableType tableType;
+    public LineType lineType;
 
     public MyBlock[] blocks;
 

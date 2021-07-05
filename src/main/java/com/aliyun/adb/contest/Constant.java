@@ -8,13 +8,13 @@ package com.aliyun.adb.contest;
  */
 public final class Constant {
     // 数据量
-    public static final int LINE_COUNT = 10_000;
+    public static final int LINE_COUNT = 1000000000;
     // 线程数
     public static final int THREAD_COUNT = 5;
     // 每个线程的页数
     public static final int PAGE_COUNT = 1000;
     // 内存页每次申请的数组长度
-    public static final int ARRAY_LENGTH = (int) (LINE_COUNT / PAGE_COUNT / THREAD_COUNT * 1.1);
+    public static final int ARRAY_LENGTH = 1024 * 1024;
     // 文件页单次写入磁盘的页大小
     public static final int WRITE_SIZE = 32 * 1024;
     // MappedByteBuffer 单次读取的大小

@@ -2,6 +2,7 @@ package com.aliyun.adb.contest.pool;
 
 import com.aliyun.adb.contest.Constant;
 import com.aliyun.adb.contest.page.MyBlock;
+import com.aliyun.adb.contest.page.MyPage;
 import com.aliyun.adb.contest.page.MyTable;
 
 import java.io.IOException;
