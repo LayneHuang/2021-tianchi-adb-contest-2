@@ -2,6 +2,7 @@ package com.aliyun.adb.contest.pool;
 
 import com.aliyun.adb.contest.Constant;
 import com.aliyun.adb.contest.page.MyBlock;
+import com.aliyun.adb.contest.page.MyTable;
 import com.aliyun.adb.contest.page.MyValuePage;
 import sun.misc.Cleaner;
 import sun.nio.ch.DirectBuffer;
@@ -10,23 +11,23 @@ import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
-import java.util.concurrent.BlockingQueue;
 
 public class ReadTask implements Runnable {
+    private MyTable table;
 
     private MyBlock block;
 
     private Path path;
 
-    private MyValuePage[] pages;
+    private MyValuePage[][] pages;
 
-    private BlockingQueue<MyValuePage> bq;
+    private WritePool writePool;
 
-    ReadTask(Path path, MyBlock block, BlockingQueue<MyValuePage> bq) {
-        this.block = block;
+    ReadTask(Path path, MyTable table, MyBlock block, WritePool writePool) {
         this.path = path;
-        this.pages = new MyValuePage[Constant.PAGE_COUNT];
-        this.bq = bq;
+        this.table = table;
+        this.block = block;
+        this.writePool = writePool;
     }
 
     @Override
@@ -43,14 +44,30 @@ public class ReadTask implements Runnable {
         }
     }
 
+    private void initPages(int colCount) {
+        System.out.printf("Column Count: %d", colCount);
+        pages = new MyValuePage[colCount][Constant.PAGE_COUNT];
+        for (int i = 0; i < colCount; ++i) {
+            for (int j = 0; j < Constant.PAGE_COUNT; ++j) {
+                pages[i][j].tableIndex = block.tableIndex;
+                pages[i][j].blockIndex = block.blockIndex;
+                pages[i][j].columnIndex = i;
+                pages[i][j].pageIndex = j;
+            }
+        }
+    }
+
     public void trans(MyBlock block, MappedByteBuffer buffer) {
         byte b;
         if (block.blockIndex == 0) {
+            int colCount = 0;
             while ((b = buffer.get()) != 10) {
                 // 去除文件头的列名
                 if (b == 44) {
+                    colCount++;
                 }
             }
+            initPages(colCount + 1);
             // Todo: 根据取的列做初始化
         } else {
             while (buffer.hasRemaining()) {
@@ -62,18 +79,18 @@ public class ReadTask implements Runnable {
             }
         }
         while (buffer.hasRemaining()) {
-            handleByte(block, buffer.get());
+            handleByte(buffer.get());
         }
         finish(buffer);
     }
 
     private long input;
     private double inputD;
-    private int inputIndex;
+    private int nowColIndex;
     private boolean isDouble;
     private int maxDataLen;
 
-    private void handleByte(MyBlock block, byte b) {
+    private void handleByte(byte b) {
         if (b >= 48) {
             input = input * 10 + b - 48;
             maxDataLen++;
@@ -90,7 +107,7 @@ public class ReadTask implements Runnable {
             putData();
             maxDataLen = 0;
             isDouble = false;
-            inputIndex = (b == 44) ? (inputIndex + 1) : 0;
+            nowColIndex = (b == 44) ? (nowColIndex + 1) : 0;
             input = 0;
         }
     }
@@ -108,18 +125,21 @@ public class ReadTask implements Runnable {
 
     private void putLong() {
         int pageIndex = Constant.getPageIndex(input);
-        pages[pageIndex].add(input);
-        if (!pages[pageIndex].byteBuffer.hasRemaining()) {
-            try {
-                bq.put(pages[pageIndex]);
-            } catch (InterruptedException e) {
-                System.out.println("GG, PUT BQ FAILURE");
-                e.printStackTrace();
-            }
+        pages[nowColIndex][pageIndex].add(input);
+        if (!pages[nowColIndex][pageIndex].byteBuffer.hasRemaining()) {
+            writePool.execute(
+                    Constant.getPath(pages[nowColIndex][pageIndex]),
+                    pages[nowColIndex][pageIndex].byteBuffer
+            );
+            pages[nowColIndex][pageIndex] = null;
         }
     }
 
-    private static void finish(MappedByteBuffer bb) {
+    private void finish(MappedByteBuffer bb) {
+        table.addReadCount();
+        if (table.readCount == table.blockCount) {
+            // Todo: 处理块合并剩下的
+        }
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();

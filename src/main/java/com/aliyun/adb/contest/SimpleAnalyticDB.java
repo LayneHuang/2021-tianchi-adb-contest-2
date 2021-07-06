@@ -1,15 +1,20 @@
 package com.aliyun.adb.contest;
 
 import com.aliyun.adb.contest.page.MyFilePage;
+import com.aliyun.adb.contest.page.MyTable;
+import com.aliyun.adb.contest.pool.ReaderPool;
+import com.aliyun.adb.contest.pool.WritePool;
 import com.aliyun.adb.contest.spi.AnalyticDB;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class SimpleAnalyticDB implements AnalyticDB {
-    private MyFileReader[] myFileReaders;
-    private MyFileWriter[] myFileWriters;
+    private ReaderPool readerPool = new ReaderPool();
+    private WritePool writePool = new WritePool();
 
     /**
      * The implementation must contain a public no-argument constructor.
@@ -22,33 +27,16 @@ public class SimpleAnalyticDB implements AnalyticDB {
         long t = System.currentTimeMillis();
         Constant.WORK_DIR = Paths.get(workspaceDir);
         Path dirPath = Paths.get(tpchDataFileDir);
-        Files.list(dirPath).forEach(path -> {
+        List<Path> tablePaths = Files.list(dirPath).collect(Collectors.toList());
+        int tableIndex = 0;
+        for (Path path : tablePaths) {
             if (path.getFileName().toString().equals("results")) {
                 // 跳过结果数据
                 return;
             }
-            myFileReaders = new MyFileReader[Constant.THREAD_COUNT];
-            myFileWriters = new MyFileWriter[Constant.THREAD_COUNT];
-            for (int i = 0; i < Constant.THREAD_COUNT; i++) {
-                myFileReaders[i] = new MyFileReader(path, i, Constant.THREAD_COUNT, Constant.MAPPED_SIZE, Constant.PAGE_COUNT);
-                myFileWriters[i] = new MyFileWriter(myFileReaders[i]);
-            }
-            for (int i = 0; i < Constant.THREAD_COUNT; i++) {
-                if (i < Constant.THREAD_COUNT - 1) {
-                    myFileWriters[i].nextMyFileWriter = myFileWriters[i + 1];
-                }
-                myFileReaders[i].start();
-                myFileWriters[i].start();
-            }
-            for (int i = 0; i < Constant.THREAD_COUNT; i++) {
-                try {
-                    myFileReaders[i].join();
-                    myFileWriters[i].join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+            MyTable table = readerPool.start(tableIndex, path, writePool);
+            tableIndex++;
+        }
         System.out.println("COST TIME : " + (System.currentTimeMillis() - t));
     }
 
@@ -59,9 +47,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
         if (quantileCount++ > 8) {
             return "";
         }
-        String ans = String.valueOf(MyPageManager.find(column, percentile, myFileWriters));
-        System.out.println("Query:" + table + ", " + column + ", " + percentile + " Answer:" + ans);
-        return ans;
+        return "0";
     }
 
 }
