@@ -1,9 +1,13 @@
 package com.aliyun.adb.contest.pool;
 
 import com.aliyun.adb.contest.Constant;
-import com.aliyun.adb.contest.page.MyBlock;
 import com.aliyun.adb.contest.page.MyTable;
+import com.aliyun.adb.contest.page.MyValuePage;
 
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,9 +15,9 @@ import java.util.concurrent.Executors;
 public class WritePool {
     private final ExecutorService executor = Executors.newFixedThreadPool(Constant.THREAD_COUNT);
 
-    private final BlockingQueue<MyBlock> bq;
+    private final BlockingQueue<MyValuePage> bq;
 
-    WritePool(BlockingQueue<MyBlock> bq) {
+    WritePool(BlockingQueue<MyValuePage> bq) {
         this.bq = bq;
     }
 
@@ -25,13 +29,18 @@ public class WritePool {
 
     public void handleBlock() {
         try {
-            MyBlock block = bq.take();
-        } catch (InterruptedException e) {
+            MyValuePage page = bq.take();
+            page.byteBuffer.flip();
+            Path path = Constant.getPath(page);
+            try (FileChannel fileChannel = FileChannel.open(path,
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING
+            )) {
+                fileChannel.write(page.byteBuffer);
+            }
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public void handleBuffer() {
-
     }
 }

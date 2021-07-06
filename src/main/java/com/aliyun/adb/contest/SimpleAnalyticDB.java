@@ -20,7 +20,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
     @Override
     public void load(String tpchDataFileDir, String workspaceDir) throws Exception {
         long t = System.currentTimeMillis();
-        MyFilePage.WORK_DIR = Paths.get(workspaceDir);
+        Constant.WORK_DIR = Paths.get(workspaceDir);
         Path dirPath = Paths.get(tpchDataFileDir);
         Files.list(dirPath).forEach(path -> {
             if (path.getFileName().toString().equals("results")) {

@@ -2,11 +2,10 @@ package com.aliyun.adb.contest.pool;
 
 import com.aliyun.adb.contest.Constant;
 import com.aliyun.adb.contest.page.MyBlock;
-import com.aliyun.adb.contest.page.MyPage;
 import com.aliyun.adb.contest.page.MyTable;
+import com.aliyun.adb.contest.page.MyValuePage;
 
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.concurrent.BlockingQueue;
@@ -15,7 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 
 public class ReaderPool {
-    private final BlockingQueue<MyBlock> bq = new LinkedBlockingDeque<>(16);
+    private final BlockingQueue<MyValuePage> bq = new LinkedBlockingDeque<>(16);
 
     private final ExecutorService executor = Executors.newFixedThreadPool(Constant.THREAD_COUNT);
 
@@ -34,7 +33,7 @@ public class ReaderPool {
             block.begin = (long) i * Constant.MAPPED_SIZE;
             block.end = Math.min(fileSize - 1, block.begin + Constant.MAPPED_SIZE);
             table.blocks[i] = block;
-            executor.execute(() -> readFileBlock(path, block));
+            executor.execute(() -> new ReadTask(path, block, bq));
         }
         return table;
     }
@@ -46,23 +45,5 @@ public class ReaderPool {
             e.printStackTrace();
         }
         return 0;
-    }
-
-    public void readFileBlock(Path path, MyBlock block) {
-        try (FileChannel channel = FileChannel.open(path)) {
-            MappedByteBuffer buffer = channel.map(
-                    FileChannel.MapMode.READ_ONLY,
-                    block.begin,
-                    block.getSize()
-            );
-            block.trans(buffer.load());
-            bq.put(block);
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public MyBlock take() throws InterruptedException {
-        return bq.take();
     }
 }

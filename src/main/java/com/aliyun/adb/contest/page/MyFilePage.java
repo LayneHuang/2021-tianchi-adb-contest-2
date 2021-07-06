@@ -110,7 +110,7 @@ public final class MyFilePage extends MyPage {
     public MyFilePage(long startValue, long endValue, int threadIndex) {
         this.startValue = startValue;
         this.endValue = endValue;
-        this.path = WORK_DIR.resolve(threadIndex+"_"+startValue);
+        this.path = WORK_DIR.resolve(threadIndex + "_" + startValue);
         try {
             fileChannel = FileChannel.open(path,
                     StandardOpenOption.WRITE,
