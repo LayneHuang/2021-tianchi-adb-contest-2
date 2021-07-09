@@ -180,6 +180,9 @@ public class ReadTask implements Runnable {
             }
         }
         table.addReadCount();
+        if (table.readFinished()) {
+            System.out.println("table " + block.tableIndex + " read Finished");
+        }
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();

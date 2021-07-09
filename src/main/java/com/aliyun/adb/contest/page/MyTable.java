@@ -35,7 +35,11 @@ public class MyTable {
         pageCount.incrementAndGet();
     }
 
+    public boolean readFinished() {
+        return readCount.get() == blockCount;
+    }
+
     public boolean finished() {
-        return readCount.get() == blockCount && writeCount.get() == pageCount.get();
+        return readFinished() && writeCount.get() == pageCount.get();
     }
 }

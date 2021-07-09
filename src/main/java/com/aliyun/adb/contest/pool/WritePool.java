@@ -40,7 +40,7 @@ public class WritePool {
         }
         // System.out.println(path.getFileName() + ", process: " + table.writeCount.get() + " " + table.pageCount.get());
         if (table.finished()) {
-            System.out.println("table " + path.getFileName() + " is finished");
+            System.out.println("table " + path.getFileName() + " write finished");
             latch.countDown();
         }
     }
