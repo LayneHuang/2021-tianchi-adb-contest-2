@@ -150,8 +150,9 @@ public class ReadTask implements Runnable {
     private void finish(MyValuePage[][] pages, MappedByteBuffer bb) {
         // 最后一块读完
         setCurToBlock();
-        System.out.println("read count:" + table.readCount + " blockCount: " + table.blockCount);
-        if (table.readCount.get() == table.blockCount - 1) {
+        if (table.readCount.get() < table.blockCount - 1) {
+            table.addReadCount();
+        } else {
             // Todo: 处理块合并剩下的
             System.out.println("Merge table " + block.tableIndex);
             for (int i = 0; i < table.blocks.length - 1; ++i) {
@@ -167,8 +168,8 @@ public class ReadTask implements Runnable {
                     }
                 }
             }
-
             table.pageCount.addAndGet(pages.length * Constant.PAGE_COUNT);
+            table.addReadCount();
             for (MyValuePage[] myValuePages : pages) {
                 for (int j = 0; j < Constant.PAGE_COUNT; ++j) {
                     MyValuePage page = myValuePages[j];
@@ -180,7 +181,7 @@ public class ReadTask implements Runnable {
                 }
             }
         }
-        table.addReadCount();
+        System.out.println("read count:" + table.readCount + " blockCount: " + table.blockCount);
         if (table.readFinished()) {
             System.out.println("table " + block.tableIndex + " read Finished");
         }

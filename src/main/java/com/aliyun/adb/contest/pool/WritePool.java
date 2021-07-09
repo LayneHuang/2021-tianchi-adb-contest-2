@@ -45,9 +45,6 @@ public class WritePool {
 
     private void checkFinished(MyTable table) {
         table.addWriteCount();
-        if (table.writeCount.get() + 10 > table.pageCount.get()) {
-            System.out.println("table " + table.index + " " + table.writeCount.get() + " " + table.pageCount);
-        }
         if (table.finished()) {
             System.out.println("table " + table.index + " write finished");
             latch.countDown();
