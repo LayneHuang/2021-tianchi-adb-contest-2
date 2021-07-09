@@ -22,4 +22,12 @@ public class MyBlock {
         beginBytes[beginCur++] = b;
     }
 
+    public boolean isD;
+
+    public int lastColIndex;
+
+    public long lastInput;
+
+    public double lastInputD;
+
 }

@@ -83,16 +83,16 @@ public class ReadTask implements Runnable {
         } else {
             while (buffer.hasRemaining()) {
                 b = buffer.get();
+                block.addBeginByte(b);
                 if (b == 10) {
                     break;
                 }
-                block.addBeginByte(b);
             }
         }
         while (buffer.hasRemaining()) {
             handleByte(pages, buffer.get());
         }
-        finish(buffer);
+        finish(pages, buffer);
     }
 
     private long input;
@@ -110,7 +110,6 @@ public class ReadTask implements Runnable {
             isDouble = true;
             inputD = input;
             maxDataLen = 0;
-//            System.out.println("Has Double!!");
         } else {
             if (isDouble) {
                 inputD += input * Math.pow(0.1, maxDataLen);
@@ -147,16 +146,56 @@ public class ReadTask implements Runnable {
         }
     }
 
-    private void finish(MappedByteBuffer bb) {
+    private void finish(MyValuePage[][] pages, MappedByteBuffer bb) {
         // 最后一块读完
+        setCurToBlock();
         if (table.readCount.get() == table.blockCount - 1) {
             // Todo: 处理块合并剩下的
-
+            System.out.println("Merge table " + block.tableIndex);
+            for (int i = 0; i < table.blocks.length - 1; ++i) {
+                MyBlock block = table.blocks[i];
+                MyBlock nxtBlock = table.blocks[i + 1];
+                getCurFrom(block);
+                if (nxtBlock.beginCur == 0) {
+                    int pageIndex = Constant.getPageIndex(input);
+                    putData(pages[nowColIndex][pageIndex]);
+                } else {
+                    for (int j = 0; j < nxtBlock.beginCur; ++j) {
+                        handleByte(pages, nxtBlock.beginBytes[j]);
+                    }
+                }
+            }
+            for (MyValuePage[] myValuePages : pages) {
+                for (int j = 0; j < Constant.PAGE_COUNT; ++j) {
+                    MyValuePage page = myValuePages[j];
+                    if (page.byteBuffer != null && page.byteBuffer.position() > 0) {
+                        writePool.execute(
+                                table,
+                                Constant.getPath(page),
+                                page.byteBuffer
+                        );
+                    }
+                }
+            }
         }
         table.addReadCount();
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();
         }
+    }
+
+    private void setCurToBlock() {
+        block.lastColIndex = nowColIndex;
+        block.lastInput = input;
+        block.lastInputD = inputD;
+        block.isD = isDouble;
+    }
+
+    private void getCurFrom(MyBlock block) {
+        nowColIndex = block.lastColIndex;
+        input = block.lastInput;
+        inputD = block.lastInputD;
+        isDouble = block.isD;
     }
 }
