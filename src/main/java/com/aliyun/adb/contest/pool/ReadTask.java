@@ -128,6 +128,7 @@ public class ReadTask implements Runnable {
         pages[nowColIndex][pageIndex].add(input);
         if (!pages[nowColIndex][pageIndex].byteBuffer.hasRemaining()) {
             writePool.execute(
+                    table,
                     Constant.getPath(pages[nowColIndex][pageIndex]),
                     pages[nowColIndex][pageIndex].byteBuffer
             );
@@ -136,10 +137,12 @@ public class ReadTask implements Runnable {
     }
 
     private void finish(MappedByteBuffer bb) {
-        table.addReadCount();
-        if (table.readCount == table.blockCount) {
+        // 最后一块读完
+        if (table.readCount.get() == table.blockCount - 1) {
             // Todo: 处理块合并剩下的
+
         }
+        table.addReadCount();
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();

@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 public class SimpleAnalyticDB implements AnalyticDB {
@@ -28,15 +29,19 @@ public class SimpleAnalyticDB implements AnalyticDB {
         Constant.WORK_DIR = Paths.get(workspaceDir);
         Path dirPath = Paths.get(tpchDataFileDir);
         List<Path> tablePaths = Files.list(dirPath).collect(Collectors.toList());
+        // 等待所有表跑完
+        CountDownLatch latch = new CountDownLatch(tablePaths.size());
         int tableIndex = 0;
         for (Path path : tablePaths) {
             if (path.getFileName().toString().equals("results")) {
                 // 跳过结果数据
+                latch.countDown();
                 return;
             }
             MyTable table = readerPool.start(tableIndex, path, writePool);
             tableIndex++;
         }
+        latch.await();
         System.out.println("COST TIME : " + (System.currentTimeMillis() - t));
     }
 

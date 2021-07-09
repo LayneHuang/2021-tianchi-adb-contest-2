@@ -18,11 +18,6 @@ public class MyBlock {
 
     public byte[] beginBytes = new byte[40];
 
-    /**
-     * 数据最长位数, 区分 int, long
-     */
-    public int maxDataLen;
-
     public void addBeginByte(byte b) {
         beginBytes[beginCur++] = b;
     }
