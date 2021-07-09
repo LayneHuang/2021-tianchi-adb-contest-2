@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ReadTask implements Runnable {
     private MyTable table;
@@ -59,7 +61,7 @@ public class ReadTask implements Runnable {
     }
 
     public void trans(MyBlock block, MappedByteBuffer buffer) {
-        MyValuePage[][] pages = null;
+        Map<String, MyValuePage> pages = new HashMap<>();
         byte b;
         if (block.blockIndex == 0) {
             int colCount = 0;
@@ -78,7 +80,6 @@ public class ReadTask implements Runnable {
                     colName.append((char) b);
                 }
             }
-            pages = genPages(colCount + 1);
             // Todo: 根据取的列做初始化
         } else {
             while (buffer.hasRemaining()) {
@@ -102,7 +103,7 @@ public class ReadTask implements Runnable {
     private int maxDataLen;
     private boolean isFirst = false;
 
-    private void handleByte(MyValuePage[][] pages, byte b) {
+    private void handleByte(Map<String, MyValuePage> pages, byte b) {
         if (b >= 48) {
             input = input * 10 + b - 48;
             maxDataLen++;
@@ -119,14 +120,14 @@ public class ReadTask implements Runnable {
                 }
                 inputD += input * Math.pow(0.1, maxDataLen);
             }
-            int pageIndex = Constant.getPageIndex(input);
-            putData(pages[nowColIndex][pageIndex]);
+            putData(getPage(pages, nowColIndex, input));
             maxDataLen = 0;
             isDouble = false;
             nowColIndex = (b == 44) ? (nowColIndex + 1) : 0;
             input = 0;
         }
     }
+
 
     private void putData(MyValuePage page) {
         if (isDouble) {
@@ -152,7 +153,7 @@ public class ReadTask implements Runnable {
         }
     }
 
-    private void finish(MyValuePage[][] pages, MappedByteBuffer bb) {
+    private void finish(Map<String, MyValuePage> pages, MappedByteBuffer bb) {
         // 最后一块读完
         setCurToBlock();
         if (table.readCount.get() < table.blockCount - 1) {
@@ -164,27 +165,17 @@ public class ReadTask implements Runnable {
                 MyBlock block = table.blocks[i];
                 MyBlock nxtBlock = table.blocks[i + 1];
                 getCurFrom(block);
-                if (nxtBlock.beginCur == 0) {
-                    int pageIndex = Constant.getPageIndex(input);
-                    putData(pages[nowColIndex][pageIndex]);
-                } else {
-                    for (int j = 0; j < nxtBlock.beginCur; ++j) {
-                        handleByte(pages, nxtBlock.beginBytes[j]);
-                    }
+                for (int j = 0; j < nxtBlock.beginCur; ++j) {
+                    handleByte(pages, nxtBlock.beginBytes[j]);
                 }
             }
-            table.pageCount.addAndGet(pages.length * Constant.PAGE_COUNT);
+            table.pageCount.addAndGet(pages.size());
             table.addReadCount();
-            for (MyValuePage[] myValuePages : pages) {
-                for (int j = 0; j < Constant.PAGE_COUNT; ++j) {
-                    MyValuePage page = myValuePages[j];
-                    writePool.execute(
-                            table,
-                            Constant.getPath(page),
-                            page.byteBuffer
-                    );
-                }
-            }
+            pages.forEach((key, page) -> writePool.execute(
+                    table,
+                    Constant.getPath(page),
+                    page.byteBuffer
+            ));
         }
         System.out.println("read count:" + table.readCount + " blockCount: " + table.blockCount);
         if (table.readFinished()) {
@@ -208,5 +199,24 @@ public class ReadTask implements Runnable {
         input = block.lastInput;
         inputD = block.lastInputD;
         isDouble = block.isD;
+    }
+
+    private MyValuePage getPage(Map<String, MyValuePage> pages, int colIndex, long value) {
+        int pageIndex = Constant.getPageIndex(value);
+        String key = getKey(colIndex, pageIndex);
+        if (!pages.containsKey(key)) {
+            MyValuePage page = new MyValuePage();
+            page.tableIndex = block.tableIndex;
+            page.blockIndex = block.blockIndex;
+            page.columnIndex = colIndex;
+            page.pageIndex = pageIndex;
+            pages.put(key, page);
+            return page;
+        }
+        return pages.get(key);
+    }
+
+    private String getKey(int colIndex, int pageIndex) {
+        return colIndex + ":" + pageIndex;
     }
 }

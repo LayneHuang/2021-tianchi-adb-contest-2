@@ -8,7 +8,9 @@ import com.aliyun.adb.contest.spi.AnalyticDB;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
@@ -16,6 +18,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
     private final WritePool writePool = new WritePool();
     private final ReaderPool readerPool = new ReaderPool();
     private MyTable[] tables = null;
+    private Map<String, Integer> indexMap = new HashMap<>();
 
     /**
      * The implementation must contain a public no-argument constructor.
@@ -47,15 +50,11 @@ public class SimpleAnalyticDB implements AnalyticDB {
         }
         latch.await();
         System.out.println("COST TIME : " + (System.currentTimeMillis() - t));
-    }
 
-    private int quantileCount = 0;
+    }
 
     @Override
     public String quantile(String table, String column, double percentile) {
-        if (quantileCount++ > 8) {
-            return "";
-        }
         return "0";
     }
 
