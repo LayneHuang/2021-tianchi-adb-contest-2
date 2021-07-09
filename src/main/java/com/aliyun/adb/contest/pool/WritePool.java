@@ -38,8 +38,9 @@ public class WritePool {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(path.getFileName() + ", process: " + table.writeCount.get() + " " + table.pageCount.get());
+        // System.out.println(path.getFileName() + ", process: " + table.writeCount.get() + " " + table.pageCount.get());
         if (table.finished()) {
+            System.out.println("table " + path.getFileName() + " is finished");
             latch.countDown();
         }
     }

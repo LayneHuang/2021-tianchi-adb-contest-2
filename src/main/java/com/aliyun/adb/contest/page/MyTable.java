@@ -19,6 +19,7 @@ public class MyTable {
     public AtomicInteger pageCount = new AtomicInteger(0);
 
     public MyTable(int blockCount) {
+        this.blockCount = blockCount;
         blocks = new MyBlock[blockCount];
     }
 
