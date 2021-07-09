@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ReaderPool {
+
     private final ExecutorService executor = Executors.newFixedThreadPool(Constant.THREAD_COUNT);
 
     public int readBlockCount = 0;
@@ -28,7 +29,8 @@ public class ReaderPool {
             block.begin = (long) i * Constant.MAPPED_SIZE;
             block.end = Math.min(fileSize - 1, block.begin + Constant.MAPPED_SIZE);
             table.blocks[i] = block;
-            executor.execute(() -> new ReadTask(path, table, block, writePool));
+            ReadTask task = new ReadTask(path, table, block, writePool);
+            executor.execute(task);
         }
         return table;
     }

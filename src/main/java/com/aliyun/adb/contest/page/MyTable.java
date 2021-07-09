@@ -1,11 +1,14 @@
 package com.aliyun.adb.contest.page;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MyTable {
-    public int blockCount;
 
-    public LineType lineType;
+    public Map<String, Integer> colIndexMap = new HashMap<>(2);
+
+    public int blockCount;
 
     public MyBlock[] blocks;
 
@@ -28,7 +31,7 @@ public class MyTable {
     }
 
     public void addPageCount() {
-        writeCount.incrementAndGet();
+        pageCount.incrementAndGet();
     }
 
     public boolean finished() {

@@ -1,6 +1,5 @@
 package com.aliyun.adb.contest;
 
-import com.aliyun.adb.contest.page.MyFilePage;
 import com.aliyun.adb.contest.page.MyTable;
 import com.aliyun.adb.contest.pool.ReaderPool;
 import com.aliyun.adb.contest.pool.WritePool;
@@ -14,6 +13,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 public class SimpleAnalyticDB implements AnalyticDB {
+    private final WritePool writePool = new WritePool();
+    private final ReaderPool readerPool = new ReaderPool();
+    private MyTable[] tables = null;
 
     /**
      * The implementation must contain a public no-argument constructor.
@@ -28,17 +30,19 @@ public class SimpleAnalyticDB implements AnalyticDB {
         Path dirPath = Paths.get(tpchDataFileDir);
         List<Path> tablePaths = Files.list(dirPath).collect(Collectors.toList());
         // 等待所有表跑完
-        CountDownLatch latch = new CountDownLatch(tablePaths.size());
-        WritePool writePool = new WritePool(latch);
-        ReaderPool readerPool = new ReaderPool();
+        int tableSize = tablePaths.size();
+        tables = new MyTable[tableSize];
+        CountDownLatch latch = new CountDownLatch(tableSize);
+        writePool.setLatch(latch);
+        System.out.printf("table count: %d\n", tablePaths.size());
         int tableIndex = 0;
         for (Path path : tablePaths) {
             if (path.getFileName().toString().equals("results")) {
                 // 跳过结果数据
                 latch.countDown();
-                return;
+                continue;
             }
-            MyTable table = readerPool.start(tableIndex, path, writePool);
+            tables[tableIndex] = readerPool.start(tableIndex, path, writePool);
             tableIndex++;
         }
         latch.await();

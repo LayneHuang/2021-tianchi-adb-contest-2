@@ -19,8 +19,6 @@ public class ReadTask implements Runnable {
 
     private Path path;
 
-    private MyValuePage[][] pages;
-
     private WritePool writePool;
 
     ReadTask(Path path, MyTable table, MyBlock block, WritePool writePool) {
@@ -32,6 +30,7 @@ public class ReadTask implements Runnable {
 
     @Override
     public void run() {
+        System.out.printf("Running: %d, %d\n", block.tableIndex, block.blockIndex);
         try (FileChannel channel = FileChannel.open(path)) {
             MappedByteBuffer buffer = channel.map(
                     FileChannel.MapMode.READ_ONLY,
@@ -44,30 +43,42 @@ public class ReadTask implements Runnable {
         }
     }
 
-    private void initPages(int colCount) {
-        System.out.printf("Column Count: %d", colCount);
-        pages = new MyValuePage[colCount][Constant.PAGE_COUNT];
+    private MyValuePage[][] genPages(int colCount) {
+        System.out.printf("Column Count: %d\n", colCount);
+        MyValuePage[][] pages = new MyValuePage[colCount][Constant.PAGE_COUNT];
         for (int i = 0; i < colCount; ++i) {
             for (int j = 0; j < Constant.PAGE_COUNT; ++j) {
+                pages[i][j] = new MyValuePage();
                 pages[i][j].tableIndex = block.tableIndex;
                 pages[i][j].blockIndex = block.blockIndex;
                 pages[i][j].columnIndex = i;
                 pages[i][j].pageIndex = j;
             }
         }
+        return pages;
     }
 
     public void trans(MyBlock block, MappedByteBuffer buffer) {
+        MyValuePage[][] pages = null;
         byte b;
         if (block.blockIndex == 0) {
             int colCount = 0;
-            while ((b = buffer.get()) != 10) {
+            StringBuilder colName = new StringBuilder();
+            while ((b = buffer.get()) > 0) {
                 // 去除文件头的列名
-                if (b == 44) {
+                if (b == 44 || b == 10) {
+                    System.out.println("colname: " + colName.toString());
+                    table.colIndexMap.put(colName.toString(), colCount);
+                    colName = new StringBuilder();
+                    if (b == 10) {
+                        break;
+                    }
                     colCount++;
+                } else {
+                    colName.append((char) b);
                 }
             }
-            initPages(colCount + 1);
+            pages = genPages(colCount + 1);
             // Todo: 根据取的列做初始化
         } else {
             while (buffer.hasRemaining()) {
@@ -79,7 +90,7 @@ public class ReadTask implements Runnable {
             }
         }
         while (buffer.hasRemaining()) {
-            handleByte(buffer.get());
+            handleByte(pages, buffer.get());
         }
         finish(buffer);
     }
@@ -90,7 +101,7 @@ public class ReadTask implements Runnable {
     private boolean isDouble;
     private int maxDataLen;
 
-    private void handleByte(byte b) {
+    private void handleByte(MyValuePage[][] pages, byte b) {
         if (b >= 48) {
             input = input * 10 + b - 48;
             maxDataLen++;
@@ -99,12 +110,13 @@ public class ReadTask implements Runnable {
             isDouble = true;
             inputD = input;
             maxDataLen = 0;
-            System.out.println("Has Double!!");
+//            System.out.println("Has Double!!");
         } else {
             if (isDouble) {
                 inputD += input * Math.pow(0.1, maxDataLen);
             }
-            putData();
+            int pageIndex = Constant.getPageIndex(input);
+            putData(pages[nowColIndex][pageIndex]);
             maxDataLen = 0;
             isDouble = false;
             nowColIndex = (b == 44) ? (nowColIndex + 1) : 0;
@@ -112,27 +124,26 @@ public class ReadTask implements Runnable {
         }
     }
 
-    private void putData() {
+    private void putData(MyValuePage page) {
         if (isDouble) {
             putDouble();
         } else {
-            putLong();
+            putLong(page);
         }
     }
 
     private void putDouble() {
     }
 
-    private void putLong() {
-        int pageIndex = Constant.getPageIndex(input);
-        pages[nowColIndex][pageIndex].add(input);
-        if (!pages[nowColIndex][pageIndex].byteBuffer.hasRemaining()) {
+    private void putLong(MyValuePage page) {
+        page.add(input);
+        if (!page.byteBuffer.hasRemaining()) {
             writePool.execute(
                     table,
-                    Constant.getPath(pages[nowColIndex][pageIndex]),
-                    pages[nowColIndex][pageIndex].byteBuffer
+                    Constant.getPath(page),
+                    page.byteBuffer
             );
-            pages[nowColIndex][pageIndex] = null;
+            page.byteBuffer = null;
         }
     }
 
