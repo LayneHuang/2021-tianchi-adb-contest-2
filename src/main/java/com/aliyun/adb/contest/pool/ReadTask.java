@@ -100,6 +100,7 @@ public class ReadTask implements Runnable {
     private int nowColIndex;
     private boolean isDouble;
     private int maxDataLen;
+    private boolean isFirst = false;
 
     private void handleByte(MyValuePage[][] pages, byte b) {
         if (b >= 48) {
@@ -112,6 +113,10 @@ public class ReadTask implements Runnable {
             maxDataLen = 0;
         } else {
             if (isDouble) {
+                if (!isFirst) {
+                    isFirst = true;
+                    System.out.println("HAS DOUBLE!!!");
+                }
                 inputD += input * Math.pow(0.1, maxDataLen);
             }
             int pageIndex = Constant.getPageIndex(input);
