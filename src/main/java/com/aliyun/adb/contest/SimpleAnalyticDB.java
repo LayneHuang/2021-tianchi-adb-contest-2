@@ -46,15 +46,27 @@ public class SimpleAnalyticDB implements AnalyticDB {
                 continue;
             }
             tables[tableIndex] = readerPool.start(tableIndex, path, writePool);
+            indexMap.put(path.getFileName().toString(), tableIndex);
             tableIndex++;
         }
         latch.await();
         System.out.println("COST TIME : " + (System.currentTimeMillis() - t));
-
+        for (int i = 0; i < tableSize; ++i) {
+            if (tables[i] == null) continue;
+            int cnt = 0;
+            for (int j = 0; j < tables[i].blockCount; ++j) {
+                for (int k = 0; k < Constant.PAGE_COUNT; ++k) {
+                    cnt += tables[i].pageCounts[j][k];
+                }
+            }
+            System.out.println("table " + i + ": " + cnt);
+        }
     }
 
     @Override
     public String quantile(String table, String column, double percentile) {
+        int tableIdx = indexMap.get(table);
+        int colIdx = tables[tableIdx].colIndexMap.get(column);
         return "0";
     }
 

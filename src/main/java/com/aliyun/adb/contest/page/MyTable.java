@@ -14,11 +14,13 @@ public class MyTable {
 
     public MyBlock[] blocks;
 
+    public int[][] pageCounts;
+
     public AtomicInteger readCount = new AtomicInteger(0);
 
     public AtomicInteger writeCount = new AtomicInteger(0);
 
-    public AtomicInteger pageCount = new AtomicInteger(0);
+    public AtomicInteger allPageCount = new AtomicInteger(0);
 
     public MyTable(int blockCount) {
         this.blockCount = blockCount;
@@ -33,8 +35,8 @@ public class MyTable {
         writeCount.incrementAndGet();
     }
 
-    public void addPageCount() {
-        pageCount.incrementAndGet();
+    public void addAllPageCount() {
+        allPageCount.incrementAndGet();
     }
 
     public boolean readFinished() {
@@ -42,6 +44,6 @@ public class MyTable {
     }
 
     public boolean finished() {
-        return readFinished() && writeCount.get() == pageCount.get();
+        return readFinished() && writeCount.get() == allPageCount.get();
     }
 }

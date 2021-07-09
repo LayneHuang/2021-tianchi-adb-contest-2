@@ -45,21 +45,6 @@ public class ReadTask implements Runnable {
         }
     }
 
-    private MyValuePage[][] genPages(int colCount) {
-        System.out.printf("Column Count: %d\n", colCount);
-        MyValuePage[][] pages = new MyValuePage[colCount][Constant.PAGE_COUNT];
-        for (int i = 0; i < colCount; ++i) {
-            for (int j = 0; j < Constant.PAGE_COUNT; ++j) {
-                pages[i][j] = new MyValuePage();
-                pages[i][j].tableIndex = block.tableIndex;
-                pages[i][j].blockIndex = block.blockIndex;
-                pages[i][j].columnIndex = i;
-                pages[i][j].pageIndex = j;
-            }
-        }
-        return pages;
-    }
-
     public void trans(MyBlock block, MappedByteBuffer buffer) {
         Map<String, MyValuePage> pages = new HashMap<>();
         byte b;
@@ -143,7 +128,7 @@ public class ReadTask implements Runnable {
     private void putLong(MyValuePage page) {
         page.add(input);
         if (!page.byteBuffer.hasRemaining()) {
-            table.addPageCount();
+            table.addAllPageCount();
             writePool.execute(
                     table,
                     Constant.getPath(page),
@@ -154,12 +139,11 @@ public class ReadTask implements Runnable {
     }
 
     private void finish(Map<String, MyValuePage> pages, MappedByteBuffer bb) {
-        // 最后一块读完
         setCurToBlock();
         if (table.readCount.get() < table.blockCount - 1) {
             table.addReadCount();
         } else {
-            // Todo: 处理块合并剩下的
+            // 最后一块读完
             System.out.println("Merge table " + block.tableIndex);
             for (int i = 0; i < table.blocks.length - 1; ++i) {
                 MyBlock block = table.blocks[i];
@@ -169,18 +153,18 @@ public class ReadTask implements Runnable {
                     handleByte(pages, nxtBlock.beginBytes[j]);
                 }
             }
-            table.pageCount.addAndGet(pages.size());
+            table.allPageCount.addAndGet(pages.size());
             table.addReadCount();
-            pages.forEach((key, page) -> writePool.execute(
-                    table,
-                    Constant.getPath(page),
-                    page.byteBuffer
-            ));
+            pages.forEach((key, page) -> {
+                table.pageCounts[page.blockIndex][page.pageIndex] += page.dataCount;
+                writePool.execute(
+                        table,
+                        Constant.getPath(page),
+                        page.byteBuffer
+                );
+            });
         }
-        System.out.println("read count:" + table.readCount + " blockCount: " + table.blockCount);
-        if (table.readFinished()) {
-            System.out.println("table " + block.tableIndex + " read Finished");
-        }
+        table.blocks = null;
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();
@@ -210,6 +194,7 @@ public class ReadTask implements Runnable {
             page.blockIndex = block.blockIndex;
             page.columnIndex = colIndex;
             page.pageIndex = pageIndex;
+            page.dataCount = 0;
             pages.put(key, page);
             return page;
         }
