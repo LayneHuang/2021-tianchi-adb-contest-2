@@ -14,8 +14,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 public class SimpleAnalyticDB implements AnalyticDB {
-    private ReaderPool readerPool = new ReaderPool();
-    private WritePool writePool = new WritePool();
 
     /**
      * The implementation must contain a public no-argument constructor.
@@ -31,6 +29,8 @@ public class SimpleAnalyticDB implements AnalyticDB {
         List<Path> tablePaths = Files.list(dirPath).collect(Collectors.toList());
         // 等待所有表跑完
         CountDownLatch latch = new CountDownLatch(tablePaths.size());
+        WritePool writePool = new WritePool(latch);
+        ReaderPool readerPool = new ReaderPool();
         int tableIndex = 0;
         for (Path path : tablePaths) {
             if (path.getFileName().toString().equals("results")) {

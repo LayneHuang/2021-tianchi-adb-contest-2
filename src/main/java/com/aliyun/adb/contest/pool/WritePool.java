@@ -4,6 +4,7 @@ import com.aliyun.adb.contest.Constant;
 import com.aliyun.adb.contest.page.MyTable;
 
 import java.io.IOException;
+import java.lang.reflect.WildcardType;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -17,12 +18,16 @@ public class WritePool {
 
     private CountDownLatch latch;
 
+    public WritePool(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
     public void setLatch(CountDownLatch latch) {
         this.latch = latch;
     }
 
     public void execute(MyTable table, Path path, ByteBuffer buffer) {
-        table.pageCount.incrementAndGet();
+        table.addPageCount();
         executor.execute(() -> handleBlock(table, path, buffer));
     }
 
@@ -34,6 +39,7 @@ public class WritePool {
                 StandardOpenOption.TRUNCATE_EXISTING
         )) {
             fileChannel.write(buffer);
+            table.addWriteCount();
         } catch (IOException e) {
             e.printStackTrace();
         }
