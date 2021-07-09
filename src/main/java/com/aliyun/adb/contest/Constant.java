@@ -14,7 +14,7 @@ import java.nio.file.Path;
 public final class Constant {
     public static Path WORK_DIR;
     // 数据量
-    public static final int LINE_COUNT = 1000000000;
+    public static final int LINE_COUNT = 10000;
     // 线程数
     public static final int THREAD_COUNT = 8;
     // 每个线程的页数
@@ -54,6 +54,15 @@ public final class Constant {
                         "_c" + page.columnIndex +
                         "_b" + page.blockIndex +
                         "_p" + page.pageIndex
+        );
+    }
+
+    public static Path getPath(int tIdx, int cIdx, int bIdx, int pIdx) {
+        return Constant.WORK_DIR.resolve(
+                "t" + tIdx +
+                        "_c" + cIdx +
+                        "_b" + bIdx +
+                        "_p" + pIdx
         );
     }
 }

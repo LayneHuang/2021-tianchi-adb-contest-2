@@ -5,6 +5,7 @@ import com.aliyun.adb.contest.pool.ReaderPool;
 import com.aliyun.adb.contest.pool.WritePool;
 import com.aliyun.adb.contest.spi.AnalyticDB;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -64,10 +65,10 @@ public class SimpleAnalyticDB implements AnalyticDB {
     }
 
     @Override
-    public String quantile(String table, String column, double percentile) {
+    public String quantile(String table, String column, double percentile) throws IOException {
         int tableIdx = indexMap.get(table);
         int colIdx = tables[tableIdx].colIndexMap.get(column);
-        return "0";
+        return String.valueOf(MyPageManager.find(tables[tableIdx], tableIdx, colIdx, percentile));
     }
 
 }
