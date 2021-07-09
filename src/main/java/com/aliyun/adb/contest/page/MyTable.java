@@ -8,6 +8,8 @@ public class MyTable {
 
     public Map<String, Integer> colIndexMap = new HashMap<>(2);
 
+    public int index;
+
     public int blockCount;
 
     public MyBlock[] blocks;

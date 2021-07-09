@@ -22,7 +22,10 @@ public class WritePool {
     }
 
     public void execute(MyTable table, Path path, ByteBuffer buffer) {
-        table.addPageCount();
+        if (buffer == null || buffer.position() == 0) {
+            checkFinished(table);
+            return;
+        }
         executor.execute(() -> handleBlock(table, path, buffer));
     }
 
@@ -34,13 +37,19 @@ public class WritePool {
                 StandardOpenOption.TRUNCATE_EXISTING
         )) {
             fileChannel.write(buffer);
-            table.addWriteCount();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // System.out.println(path.getFileName() + ", process: " + table.writeCount.get() + " " + table.pageCount.get());
+        checkFinished(table);
+    }
+
+    private void checkFinished(MyTable table) {
+        table.addWriteCount();
+        if (table.writeCount.get() + 10 > table.pageCount.get()) {
+            System.out.println("table " + table.index + " " + table.writeCount.get() + " " + table.pageCount);
+        }
         if (table.finished()) {
-            System.out.println("table " + path.getFileName() + " write finished");
+            System.out.println("table " + table.index + " write finished");
             latch.countDown();
         }
     }

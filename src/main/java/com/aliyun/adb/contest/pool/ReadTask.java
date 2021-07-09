@@ -137,6 +137,7 @@ public class ReadTask implements Runnable {
     private void putLong(MyValuePage page) {
         page.add(input);
         if (!page.byteBuffer.hasRemaining()) {
+            table.addPageCount();
             writePool.execute(
                     table,
                     Constant.getPath(page),
@@ -166,16 +167,16 @@ public class ReadTask implements Runnable {
                     }
                 }
             }
+
+            table.pageCount.addAndGet(pages.length * Constant.PAGE_COUNT);
             for (MyValuePage[] myValuePages : pages) {
                 for (int j = 0; j < Constant.PAGE_COUNT; ++j) {
                     MyValuePage page = myValuePages[j];
-                    if (page.byteBuffer != null && page.byteBuffer.position() > 0) {
-                        writePool.execute(
-                                table,
-                                Constant.getPath(page),
-                                page.byteBuffer
-                        );
-                    }
+                    writePool.execute(
+                            table,
+                            Constant.getPath(page),
+                            page.byteBuffer
+                    );
                 }
             }
         }

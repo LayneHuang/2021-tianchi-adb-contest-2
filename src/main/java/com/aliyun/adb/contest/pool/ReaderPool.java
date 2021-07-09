@@ -16,11 +16,12 @@ public class ReaderPool {
 
     public int readBlockCount = 0;
 
-    public MyTable start(final int tableIndex, Path path, WritePool writePool) {
+    public MyTable start(int tableIndex, Path path, WritePool writePool) {
         long fileSize = getFileSize(path);
         int blockCount = (int) (fileSize / Constant.MAPPED_SIZE)
                 + (fileSize % Constant.MAPPED_SIZE == 0 ? 0 : 1);
         MyTable table = new MyTable(blockCount);
+        table.index = tableIndex;
         readBlockCount += blockCount;
         for (int i = 0; i < blockCount; i++) {
             MyBlock block = new MyBlock();
