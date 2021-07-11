@@ -107,6 +107,7 @@ public class ReadTask implements Runnable {
                 inputD += input * Math.pow(0.1, maxDataLen);
             }
             if (maxDataLen > 0) {
+                System.out.println(input);
                 putData(getPage(pages, nowColIndex, input));
             }
             maxDataLen = 0;

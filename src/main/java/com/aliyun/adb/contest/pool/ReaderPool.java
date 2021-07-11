@@ -31,7 +31,7 @@ public class ReaderPool {
             block.tableIndex = tableIndex;
             block.blockIndex = i;
             block.begin = (long) i * Constant.MAPPED_SIZE;
-            block.end = Math.min(fileSize - 1, block.begin + Constant.MAPPED_SIZE);
+            block.end = Math.min(fileSize - 1, block.begin + Constant.MAPPED_SIZE - 1);
             ReadTask task = new ReadTask(path, table, block, writePool);
             executor.execute(task);
         }
