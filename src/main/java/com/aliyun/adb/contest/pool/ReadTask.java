@@ -58,8 +58,7 @@ public class ReadTask implements Runnable {
                     for (int i = 0; i < names.length; ++i) {
                         table.colIndexMap.put(names[i], i);
                     }
-                    System.out.println(table.colIndexMap.get("L_ORDERKEY"));
-                    System.out.println(table.colIndexMap.get("L_PARTKEY"));
+                    table.pageCounts = new int[table.blockCount][Constant.PAGE_COUNT][names.length];
                     break;
                 } else {
                     if (b == 13) continue;
@@ -107,7 +106,7 @@ public class ReadTask implements Runnable {
                 inputD += input * Math.pow(0.1, maxDataLen);
             }
             if (maxDataLen > 0) {
-                System.out.println(input);
+//                System.out.println(input);
                 putData(getPage(pages, nowColIndex, input));
             }
             maxDataLen = 0;
@@ -151,8 +150,8 @@ public class ReadTask implements Runnable {
             System.out.println("Merge table " + block.tableIndex);
             for (int i = 0; i < table.blockCount - 1; ++i) {
                 MyBlock block = table.blocks[i];
-                MyBlock nxtBlock = table.blocks[i + 1];
                 getCurFrom(block);
+                MyBlock nxtBlock = table.blocks[i + 1];
                 for (int j = 0; j < nxtBlock.beginCur; ++j) {
                     handleByte(pages, nxtBlock.beginBytes[j]);
                 }
@@ -161,7 +160,7 @@ public class ReadTask implements Runnable {
             table.addReadCount();
             pages.forEach((key, page) -> {
 //                System.out.println(page.blockIndex + " " + page.pageIndex + " " + page.columnIndex);
-                table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] += page.dataCount;
+                table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] = page.dataCount;
                 writePool.execute(
                         table,
                         Constant.getPath(page),

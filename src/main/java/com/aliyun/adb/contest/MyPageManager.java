@@ -48,7 +48,7 @@ public final class MyPageManager {
         int pageSize = 0;
         for (int bIdx = 0; bIdx < table.blockCount; bIdx++) {
             pageSize += table.pageCounts[bIdx][pIdx][cIdx];
-            System.out.println(bIdx + " " + table.pageCounts[bIdx][pIdx][cIdx]);
+//            System.out.println(bIdx + " " + table.pageCounts[bIdx][pIdx][cIdx]);
         }
         return pageSize;
     }

@@ -24,7 +24,6 @@ public class ReaderPool {
         MyTable table = new MyTable(blockCount);
         table.index = tableIndex;
         readBlockCount += blockCount;
-        table.pageCounts = new int[blockCount][Constant.PAGE_COUNT][2];
         for (int i = 0; i < blockCount; i++) {
             table.blocks[i] = new MyBlock();
             MyBlock block = table.blocks[i];
