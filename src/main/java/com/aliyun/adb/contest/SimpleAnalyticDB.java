@@ -57,10 +57,10 @@ public class SimpleAnalyticDB implements AnalyticDB {
             int cnt = 0;
             for (int j = 0; j < tables[i].blockCount; ++j) {
                 for (int k = 0; k < Constant.PAGE_COUNT; ++k) {
-                    cnt += tables[i].pageCounts[0][j][k];
-                    cnt += tables[i].pageCounts[1][j][k];
+                    cnt += tables[i].pageCounts[j][k][0];
                 }
             }
+            tables[i].dataCount = cnt;
             System.out.println("table " + i + ": " + cnt);
         }
     }

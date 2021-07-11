@@ -12,7 +12,7 @@ import java.util.Arrays;
 public final class MyPageManager {
 
     public static long find(MyTable table, int tIdx, int cIdx, double percentile) throws IOException {
-        long rank = Math.round(Constant.LINE_COUNT * percentile) - 1;
+        long rank = Math.round(table.dataCount * percentile) - 1;
         ByteBuffer buffer = ByteBuffer.allocate(Constant.WRITE_SIZE);
         long offset = 0;
         for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
@@ -46,7 +46,7 @@ public final class MyPageManager {
     private static int getPageSize(MyTable table, int cIdx, int pIdx) {
         int pageSize = 0;
         for (int bIdx = 0; bIdx < table.blockCount; bIdx++) {
-            pageSize += table.pageCounts[cIdx][bIdx][pIdx];
+            pageSize += table.pageCounts[bIdx][pIdx][cIdx];
         }
         return pageSize;
     }

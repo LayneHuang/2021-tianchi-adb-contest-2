@@ -20,17 +20,18 @@ public class ReaderPool {
         long fileSize = getFileSize(path);
         int blockCount = (int) (fileSize / Constant.MAPPED_SIZE)
                 + (fileSize % Constant.MAPPED_SIZE == 0 ? 0 : 1);
+        System.out.println("table " + tableIndex + ", block count:" + blockCount);
         MyTable table = new MyTable(blockCount);
         table.index = tableIndex;
         readBlockCount += blockCount;
-        table.pageCounts = new int[2][blockCount][Constant.PAGE_COUNT];
+        table.pageCounts = new int[blockCount][Constant.PAGE_COUNT][2];
         for (int i = 0; i < blockCount; i++) {
-            MyBlock block = new MyBlock();
+            table.blocks[i] = new MyBlock();
+            MyBlock block = table.blocks[i];
             block.tableIndex = tableIndex;
             block.blockIndex = i;
             block.begin = (long) i * Constant.MAPPED_SIZE;
             block.end = Math.min(fileSize - 1, block.begin + Constant.MAPPED_SIZE);
-            table.blocks[i] = block;
             ReadTask task = new ReadTask(path, table, block, writePool);
             executor.execute(task);
         }

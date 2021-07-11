@@ -148,7 +148,7 @@ public class ReadTask implements Runnable {
         } else {
             // 最后一块读完
             System.out.println("Merge table " + block.tableIndex);
-            for (int i = 0; i < table.blocks.length - 1; ++i) {
+            for (int i = 0; i < table.blockCount - 1; ++i) {
                 MyBlock block = table.blocks[i];
                 MyBlock nxtBlock = table.blocks[i + 1];
                 getCurFrom(block);
@@ -159,15 +159,16 @@ public class ReadTask implements Runnable {
             table.allPageCount.addAndGet(pages.size());
             table.addReadCount();
             pages.forEach((key, page) -> {
-                table.pageCounts[page.columnIndex][page.blockIndex][page.pageIndex] += page.dataCount;
+//                System.out.println(page.blockIndex + " " + page.pageIndex + " " + page.columnIndex);
+                table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] += page.dataCount;
                 writePool.execute(
                         table,
                         Constant.getPath(page),
                         page.byteBuffer
                 );
             });
+            table.blocks = null;
         }
-        table.blocks = null;
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();

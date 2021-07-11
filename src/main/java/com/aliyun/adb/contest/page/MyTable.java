@@ -16,6 +16,8 @@ public class MyTable {
 
     public int[][][] pageCounts;
 
+    public int dataCount;
+
     public AtomicInteger readCount = new AtomicInteger(0);
 
     public AtomicInteger writeCount = new AtomicInteger(0);
