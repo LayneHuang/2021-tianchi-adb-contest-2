@@ -14,7 +14,7 @@ public class MyTable {
 
     public MyBlock[] blocks;
 
-    public int[][] pageCounts;
+    public int[][][] pageCounts;
 
     public AtomicInteger readCount = new AtomicInteger(0);
 

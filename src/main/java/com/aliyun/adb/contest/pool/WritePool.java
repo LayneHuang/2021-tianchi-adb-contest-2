@@ -30,12 +30,13 @@ public class WritePool {
     }
 
     private void handleBlock(MyTable table, Path path, ByteBuffer buffer) {
-        buffer.flip();
         try (FileChannel fileChannel = FileChannel.open(path,
                 StandardOpenOption.WRITE,
                 StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING
         )) {
+//            showBuffer(buffer);
+            buffer.flip();
             fileChannel.write(buffer);
         } catch (IOException e) {
             e.printStackTrace();
@@ -48,6 +49,14 @@ public class WritePool {
         if (table.finished()) {
             System.out.println("table " + table.index + " write finished");
             latch.countDown();
+        }
+    }
+
+    private void showBuffer(ByteBuffer buffer) {
+        buffer.flip();
+        while (buffer.hasRemaining()) {
+            long v = buffer.getLong();
+            System.out.println(v);
         }
     }
 }

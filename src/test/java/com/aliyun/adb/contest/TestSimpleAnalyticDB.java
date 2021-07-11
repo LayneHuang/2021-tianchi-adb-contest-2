@@ -26,5 +26,6 @@ public class TestSimpleAnalyticDB {
                 throw new Exception("答案错误 " + line + " , 你的答案 " + quantile);
             }
         }
+        System.out.println("finish");
     }
 }

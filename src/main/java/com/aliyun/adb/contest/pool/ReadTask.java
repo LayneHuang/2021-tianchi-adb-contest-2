@@ -49,19 +49,20 @@ public class ReadTask implements Runnable {
         Map<String, MyValuePage> pages = new HashMap<>();
         byte b;
         if (block.blockIndex == 0) {
-            int colCount = 0;
             StringBuilder colName = new StringBuilder();
-            while ((b = buffer.get()) > 0) {
+            while (buffer.hasRemaining()) {
+                b = buffer.get();
                 // 去除文件头的列名
-                if (b == 44 || b == 10) {
-                    System.out.println("colname: " + colName.toString());
-                    table.colIndexMap.put(colName.toString(), colCount);
-                    colName = new StringBuilder();
-                    if (b == 10) {
-                        break;
+                if (b == 10) {
+                    String[] names = colName.toString().split(",");
+                    for (int i = 0; i < names.length; ++i) {
+                        table.colIndexMap.put(names[i], i);
                     }
-                    colCount++;
+                    System.out.println(table.colIndexMap.get("L_ORDERKEY"));
+                    System.out.println(table.colIndexMap.get("L_PARTKEY"));
+                    break;
                 } else {
+                    if (b == 13) continue;
                     colName.append((char) b);
                 }
             }
@@ -105,7 +106,9 @@ public class ReadTask implements Runnable {
                 }
                 inputD += input * Math.pow(0.1, maxDataLen);
             }
-            putData(getPage(pages, nowColIndex, input));
+            if (maxDataLen > 0) {
+                putData(getPage(pages, nowColIndex, input));
+            }
             maxDataLen = 0;
             isDouble = false;
             nowColIndex = (b == 44) ? (nowColIndex + 1) : 0;
@@ -156,7 +159,7 @@ public class ReadTask implements Runnable {
             table.allPageCount.addAndGet(pages.size());
             table.addReadCount();
             pages.forEach((key, page) -> {
-                table.pageCounts[page.blockIndex][page.pageIndex] += page.dataCount;
+                table.pageCounts[page.columnIndex][page.blockIndex][page.pageIndex] += page.dataCount;
                 writePool.execute(
                         table,
                         Constant.getPath(page),

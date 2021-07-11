@@ -57,7 +57,8 @@ public class SimpleAnalyticDB implements AnalyticDB {
             int cnt = 0;
             for (int j = 0; j < tables[i].blockCount; ++j) {
                 for (int k = 0; k < Constant.PAGE_COUNT; ++k) {
-                    cnt += tables[i].pageCounts[j][k];
+                    cnt += tables[i].pageCounts[0][j][k];
+                    cnt += tables[i].pageCounts[1][j][k];
                 }
             }
             System.out.println("table " + i + ": " + cnt);
@@ -66,9 +67,11 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
-        int tableIdx = indexMap.get(table);
-        int colIdx = tables[tableIdx].colIndexMap.get(column);
-        return String.valueOf(MyPageManager.find(tables[tableIdx], tableIdx, colIdx, percentile));
+        int tIdx = indexMap.get(table);
+        int colIdx = tables[tIdx].colIndexMap.getOrDefault(column, 10);
+        long ans = MyPageManager.find(tables[tIdx], tIdx, colIdx, percentile);
+        System.out.println("ans: " + ans);
+        return String.valueOf(ans);
     }
 
 }
