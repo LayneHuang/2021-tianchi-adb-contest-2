@@ -68,6 +68,7 @@ public class ReadTask implements Runnable {
         } else {
             while (buffer.hasRemaining()) {
                 b = buffer.get();
+                // Todo: 这里有问题, 换行一定要从0开始
                 if (b < 48 || b >= 58) {
                     break;
                 }
@@ -143,7 +144,6 @@ public class ReadTask implements Runnable {
         setCurToBlock();
         // 最后一块读完
         if (table.readCount.get() == table.blockCount - 1) {
-            System.out.println("Merge table " + block.tableIndex);
             for (int i = 0; i < table.blockCount - 1; ++i) {
                 MyBlock block = table.blocks[i];
                 MyBlock nxtBlock = table.blocks[i + 1];
