@@ -65,14 +65,14 @@ public class ReadTask implements Runnable {
                     colName.append((char) b);
                 }
             }
-            // Todo: 根据取的列做初始化
         } else {
             while (buffer.hasRemaining()) {
                 b = buffer.get();
-                block.addBeginByte(b);
-                if (b == 10) {
+                if (b < 48 || b >= 58) {
                     break;
                 }
+                block.beginInput = block.beginInput * 10 + b - 48;
+                block.beginLen++;
             }
         }
         while (buffer.hasRemaining()) {
@@ -106,7 +106,6 @@ public class ReadTask implements Runnable {
                 inputD += input * Math.pow(0.1, maxDataLen);
             }
             if (maxDataLen > 0) {
-//                System.out.println(input);
                 putData(getPage(pages, nowColIndex, input));
             }
             maxDataLen = 0;
@@ -115,7 +114,6 @@ public class ReadTask implements Runnable {
             input = 0;
         }
     }
-
 
     private void putData(MyValuePage page) {
         if (isDouble) {
@@ -152,9 +150,10 @@ public class ReadTask implements Runnable {
                 MyBlock block = table.blocks[i];
                 getCurFrom(block);
                 MyBlock nxtBlock = table.blocks[i + 1];
-                for (int j = 0; j < nxtBlock.beginCur; ++j) {
-                    handleByte(pages, nxtBlock.beginBytes[j]);
-                }
+                long value = block.lastInput * (long) Math.pow(10, nxtBlock.beginLen) + nxtBlock.beginInput;
+                putData(getPage(pages, block.lastColIndex, value));
+//                 System.out.println("block " + i + " " + block.lastColIndex + " " + block.lastInput + " " + nxtBlock.beginInput + " " + nxtBlock.beginLen + " " + value);
+                 System.out.println("block " + i + " " + block.lastColIndex + " " + value);
             }
             table.allPageCount.addAndGet(pages.size());
             table.addReadCount();

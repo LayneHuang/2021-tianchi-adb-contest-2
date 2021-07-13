@@ -18,19 +18,19 @@ public final class MyPageManager {
         for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
             int pageSize = getPageSize(table, cIdx, pIdx);
             if (rank <= offset + pageSize) {
-                System.out.println("FOUND!!, block count:" + table.blockCount);
+//                System.out.println("FOUND!!, block count:" + table.blockCount);
                 long[] data = new long[pageSize];
                 int index = 0;
                 for (int bIdx = 0; bIdx < table.blockCount; bIdx++) {
                     if( table.pageCounts[bIdx][pIdx][cIdx] == 0 ) continue;
                     Path path = Constant.getPath(tIdx, cIdx, bIdx, pIdx);
-                    System.out.println("FOUND!!, tIdx: " + tIdx + " cIdx: " + cIdx + " pIdx: " + pIdx + ", pageSize: " + pageSize);
+//                    System.out.println("FOUND!!, tIdx: " + tIdx + " cIdx: " + cIdx + " pIdx: " + pIdx + ", pageSize: " + pageSize);
                     FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
                     while (channel.read(buffer) > 0) {
                         buffer.flip();
                         while (buffer.hasRemaining()) {
                             long d = buffer.getLong();
-                            System.out.println(d);
+//                            System.out.println(d);
                             data[index++] = d;
                         }
                         buffer.clear();

@@ -14,14 +14,6 @@ public class MyBlock {
         return end - begin + 1;
     }
 
-    public int beginCur = 0;
-
-    public byte[] beginBytes = new byte[40];
-
-    public void addBeginByte(byte b) {
-        beginBytes[beginCur++] = b;
-    }
-
     public boolean isD;
 
     public int lastColIndex;
@@ -30,4 +22,7 @@ public class MyBlock {
 
     public double lastInputD;
 
+    public int beginLen;
+
+    public long beginInput;
 }
