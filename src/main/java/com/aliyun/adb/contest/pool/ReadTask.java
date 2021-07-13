@@ -146,12 +146,9 @@ public class ReadTask implements Runnable {
             System.out.println("Merge table " + block.tableIndex);
             for (int i = 0; i < table.blockCount - 1; ++i) {
                 MyBlock block = table.blocks[i];
-                getCurFrom(block);
                 MyBlock nxtBlock = table.blocks[i + 1];
                 long value = block.lastInput * (long) Math.pow(10, nxtBlock.beginLen) + nxtBlock.beginInput;
                 putData(getPage(pages, block.lastColIndex, value));
-//                 System.out.println("block " + i + " " + block.lastColIndex + " " + block.lastInput + " " + nxtBlock.beginInput + " " + nxtBlock.beginLen + " " + value);
-//                System.out.println("block " + i + " " + block.lastColIndex + " " + value);
             }
             table.allPageCount.addAndGet(pages.size());
             table.blocks = null;
@@ -176,13 +173,6 @@ public class ReadTask implements Runnable {
         block.lastInput = input;
         block.lastInputD = inputD;
         block.isD = isDouble;
-    }
-
-    private void getCurFrom(MyBlock block) {
-        nowColIndex = block.lastColIndex;
-        input = block.lastInput;
-        inputD = block.lastInputD;
-        isDouble = block.isD;
     }
 
     private MyValuePage getPage(Map<String, MyValuePage> pages, int colIndex, long value) {
