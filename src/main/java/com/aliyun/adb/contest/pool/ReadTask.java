@@ -141,10 +141,8 @@ public class ReadTask implements Runnable {
 
     private void finish(Map<String, MyValuePage> pages, MappedByteBuffer bb) {
         setCurToBlock();
-        if (table.readCount.get() < table.blockCount - 1) {
-            table.addReadCount();
-        } else {
-            // 最后一块读完
+        // 最后一块读完
+        if (table.readCount.get() == table.blockCount - 1) {
             System.out.println("Merge table " + block.tableIndex);
             for (int i = 0; i < table.blockCount - 1; ++i) {
                 MyBlock block = table.blocks[i];
@@ -153,21 +151,20 @@ public class ReadTask implements Runnable {
                 long value = block.lastInput * (long) Math.pow(10, nxtBlock.beginLen) + nxtBlock.beginInput;
                 putData(getPage(pages, block.lastColIndex, value));
 //                 System.out.println("block " + i + " " + block.lastColIndex + " " + block.lastInput + " " + nxtBlock.beginInput + " " + nxtBlock.beginLen + " " + value);
-                 System.out.println("block " + i + " " + block.lastColIndex + " " + value);
+//                System.out.println("block " + i + " " + block.lastColIndex + " " + value);
             }
             table.allPageCount.addAndGet(pages.size());
-            table.addReadCount();
-            pages.forEach((key, page) -> {
-//                System.out.println(page.blockIndex + " " + page.pageIndex + " " + page.columnIndex);
-                table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] = page.dataCount;
-                writePool.execute(
-                        table,
-                        Constant.getPath(page),
-                        page.byteBuffer
-                );
-            });
             table.blocks = null;
         }
+        table.addReadCount();
+        pages.forEach((key, page) -> {
+            table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] += page.dataCount;
+            writePool.execute(
+                    table,
+                    Constant.getPath(page),
+                    page.byteBuffer
+            );
+        });
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();

@@ -21,7 +21,7 @@ public final class Constant {
     // 文件页单次写入磁盘的页大小
     public static final int WRITE_SIZE = 32 * 1024;
     // MappedByteBuffer 单次读取的大小
-    public static final int MAPPED_SIZE = 256 * 1024;
+    public static final int MAPPED_SIZE = 32 * 1024 * 1024;
 
     public static void main(String[] args) {
         long halfFile = (long) (WRITE_SIZE * THREAD_COUNT * PAGE_COUNT) + (ARRAY_LENGTH * PAGE_COUNT * THREAD_COUNT * 8L);
@@ -38,7 +38,7 @@ public final class Constant {
     public static int getPageIndex(long value) {
         long distance = Long.MAX_VALUE / PAGE_COUNT;
         long result = (value / distance);
-        if( result < 0 ) System.out.println("FUCK: " + value + " " + distance);
+        if (result < 0) System.out.println("FUCK: " + value + " " + distance);
         return (int) Math.min(PAGE_COUNT - 1, (value / distance));
     }
 
