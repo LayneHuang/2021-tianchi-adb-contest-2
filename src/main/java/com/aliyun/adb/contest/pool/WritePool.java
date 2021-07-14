@@ -45,7 +45,10 @@ public class WritePool {
     }
 
     private void checkFinished(MyTable table) {
-        table.addWriteCount();
+        int writeCount = table.writeCount.incrementAndGet();
+        if (writeCount % 100 == 0) {
+            System.out.println("write count: " + writeCount + " now:" + System.currentTimeMillis());
+        }
         if (table.finished()) {
             System.out.println("table " + table.index + " write finished");
             latch.countDown();

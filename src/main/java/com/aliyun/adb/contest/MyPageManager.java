@@ -13,7 +13,6 @@ public final class MyPageManager {
 
     public static long find(MyTable table, int tIdx, int cIdx, double percentile) throws IOException {
         long rank = Math.round(table.dataCount * percentile) - 1;
-        ByteBuffer buffer = ByteBuffer.allocate(Constant.WRITE_SIZE);
         long offset = 0;
         for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
             int pageSize = getPageSize(table, cIdx, pIdx);
@@ -22,8 +21,9 @@ public final class MyPageManager {
                 long[] data = new long[pageSize];
                 int index = 0;
                 for (int bIdx = 0; bIdx < table.blockCount; bIdx++) {
-                    if( table.pageCounts[bIdx][pIdx][cIdx] == 0 ) continue;
+                    if (table.pageCounts[bIdx][pIdx][cIdx] == 0) continue;
                     Path path = Constant.getPath(tIdx, cIdx, bIdx, pIdx);
+                    ByteBuffer buffer = ByteBuffer.allocate(table.pageCounts[bIdx][pIdx][cIdx] * Long.BYTES);
 //                    System.out.println("FOUND!!, tIdx: " + tIdx + " cIdx: " + cIdx + " pIdx: " + pIdx + ", pageSize: " + pageSize);
                     FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
                     while (channel.read(buffer) > 0) {

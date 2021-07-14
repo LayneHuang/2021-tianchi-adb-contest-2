@@ -29,14 +29,6 @@ public class MyTable {
         blocks = new MyBlock[blockCount];
     }
 
-    public void addReadCount() {
-        readCount.incrementAndGet();
-    }
-
-    public void addWriteCount() {
-        writeCount.incrementAndGet();
-    }
-
     public void addAllPageCount() {
         allPageCount.incrementAndGet();
     }

@@ -32,7 +32,6 @@ public class ReadTask implements Runnable {
 
     @Override
     public void run() {
-        System.out.printf("Running: %d, %d\n", block.tableIndex, block.blockIndex);
         try (FileChannel channel = FileChannel.open(path)) {
             MappedByteBuffer buffer = channel.map(
                     FileChannel.MapMode.READ_ONLY,
@@ -153,7 +152,10 @@ public class ReadTask implements Runnable {
             table.allPageCount.addAndGet(pages.size());
             table.blocks = null;
         }
-        table.addReadCount();
+        int readCount = table.readCount.incrementAndGet();
+        if (readCount % 10 == 0) {
+            System.out.println("read count: " + readCount + " now:" + System.currentTimeMillis());
+        }
         pages.forEach((key, page) -> {
             table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] += page.dataCount;
             writePool.execute(

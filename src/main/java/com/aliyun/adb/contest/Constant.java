@@ -19,9 +19,9 @@ public final class Constant {
     // 内存页每次申请的数组长度
     public static final int ARRAY_LENGTH = 1024 * 1024;
     // 文件页单次写入磁盘的页大小
-    public static final int WRITE_SIZE = 32 * 1024;
+    public static final int WRITE_SIZE = 64 * 1024;
     // MappedByteBuffer 单次读取的大小
-    public static final int MAPPED_SIZE = 32 * 1024 * 1024;
+    public static final int MAPPED_SIZE = 64 * 1024 * 1024;
 
     public static void main(String[] args) {
         long halfFile = (long) (WRITE_SIZE * THREAD_COUNT * PAGE_COUNT) + (ARRAY_LENGTH * PAGE_COUNT * THREAD_COUNT * 8L);
