@@ -153,7 +153,7 @@ public class ReadTask implements Runnable {
             table.blocks = null;
         }
         int readCount = table.readCount.incrementAndGet();
-        if (readCount % 10 == 0) {
+        if (readCount % 100 == 0) {
             System.out.println("read count: " + readCount + " now:" + System.currentTimeMillis());
         }
         pages.forEach((key, page) -> {
