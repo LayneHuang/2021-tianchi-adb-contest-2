@@ -26,7 +26,8 @@ public class WritePool {
             checkFinished(table);
             return;
         }
-        executor.execute(() -> handleBlock(table, path, buffer));
+//        executor.execute(() -> handleBlock(table, path, buffer));
+        checkFinished(table);
     }
 
     private void handleBlock(MyTable table, Path path, ByteBuffer buffer) {
