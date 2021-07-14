@@ -151,6 +151,7 @@ public class ReadTask implements Runnable {
             }
             table.allPageCount.addAndGet(pages.size());
             table.blocks = null;
+            System.out.println("table: " + table.index + " read finished");
         }
         int readCount = table.readCount.incrementAndGet();
         if (readCount % 100 == 0) {
