@@ -131,11 +131,11 @@ public class ReadTask implements Runnable {
         page.add(input);
         if (!page.byteBuffer.hasRemaining()) {
             table.addAllPageCount();
-//            writePool.execute(
-//                    table,
-//                    Constant.getPath(page),
-//                    page.byteBuffer
-//            );
+            writePool.execute(
+                    table,
+                    Constant.getPath(page),
+                    page.byteBuffer
+            );
             page.byteBuffer = null;
         }
     }
@@ -152,7 +152,7 @@ public class ReadTask implements Runnable {
             }
             table.allPageCount.addAndGet(pages.size());
             table.blocks = null;
-            System.out.println("table: " + table.index + " read finished");
+            System.out.println("table: " + table.index + " read finished " + table.readCount.get());
         }
         int readCount = table.readCount.incrementAndGet();
         if (readCount % 100 == 0) {
