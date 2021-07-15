@@ -131,11 +131,11 @@ public class ReadTask implements Runnable {
         page.add(input);
         if (!page.byteBuffer.hasRemaining()) {
             table.addAllPageCount();
-            writePool.execute(
-                    table,
-                    Constant.getPath(page),
-                    page.byteBuffer
-            );
+//            writePool.execute(
+//                    table,
+//                    Constant.getPath(page),
+//                    page.byteBuffer
+//            );
             page.byteBuffer = null;
         }
     }
