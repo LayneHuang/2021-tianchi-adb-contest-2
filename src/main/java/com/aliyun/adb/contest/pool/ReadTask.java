@@ -95,13 +95,14 @@ public class ReadTask implements Runnable {
         } else if (b == 46) {
             // 小数点
             isDouble = true;
+            System.out.println("HAS DOUBLE!!!");
             inputD = input;
             maxDataLen = 0;
         } else {
             if (isDouble) {
 //                if (!isFirst) {
 //                    isFirst = true;
-                    System.out.println("HAS DOUBLE!!!");
+//                    System.out.println("HAS DOUBLE!!!");
 //                }
                 inputD += input * Math.pow(0.1, maxDataLen);
             }
