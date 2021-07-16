@@ -26,14 +26,15 @@ public final class MyPageManager {
                     if (table.pageCounts[bIdx][pIdx][cIdx] == 0) continue;
                     Path path = Constant.getPath(tIdx, cIdx, bIdx, pIdx);
                     ByteBuffer buffer = ByteBuffer.allocate(table.pageCounts[bIdx][pIdx][cIdx] * Long.BYTES);
-                    FileChannel channel = FileChannel.open(path, StandardOpenOption.READ);
-                    while (channel.read(buffer) > 0) {
-                        buffer.flip();
-                        while (buffer.hasRemaining()) {
-                            long d = buffer.getLong();
-                            data[index++] = d;
+                    try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+                        while (channel.read(buffer) > 0) {
+                            buffer.flip();
+                            while (buffer.hasRemaining()) {
+                                long d = buffer.getLong();
+                                data[index++] = d;
+                            }
+                            buffer.clear();
                         }
-                        buffer.clear();
                     }
                 }
                 Arrays.parallelSort(data);
