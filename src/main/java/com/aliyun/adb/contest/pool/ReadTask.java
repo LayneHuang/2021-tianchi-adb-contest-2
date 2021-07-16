@@ -155,7 +155,6 @@ public class ReadTask implements Runnable {
                 if (nxtBlock.beginLen <= 0 && block.lastInput == 0) continue;
                 long firstValue = block.lastInput * (long) Math.pow(10, nxtBlock.firstNumLen) + nxtBlock.begins[0];
                 putData(getPage(pages, block.lastColIndex, firstValue));
-//                System.out.println("mer: " + firstValue);
                 for (int j = 1; j < nxtBlock.beginLen; ++j) {
 //                    System.out.println("mer: " + nxtBlock.begins[j]);
                     putData(getPage(pages, block.lastColIndex + j, nxtBlock.begins[j]));
@@ -177,7 +176,7 @@ public class ReadTask implements Runnable {
         if (readCount >= table.blockCount) {
             table.readFinish = true;
         }
-        System.out.println("read count: " + readCount + " now:" + System.currentTimeMillis());
+//        System.out.println("read count: " + readCount + " now:" + System.currentTimeMillis());
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();
