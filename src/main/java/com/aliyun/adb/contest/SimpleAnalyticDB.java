@@ -65,17 +65,12 @@ public class SimpleAnalyticDB implements AnalyticDB {
         }
     }
 
-    private boolean debug = false;
-
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
-        if (debug) {
-            return "";
-        }
         int tIdx = indexMap.get(table);
-        int colIdx = tables[tIdx].colIndexMap.getOrDefault(column, 10);
+        int colIdx = tables[tIdx].colIndexMap.get(column);
         long ans = MyPageManager.find(tables[tIdx], tIdx, colIdx, percentile);
-        System.out.println("ans: " + ans);
+        System.out.println("query: " + table + ", column: " + column + ", ans: " + ans);
         return String.valueOf(ans);
     }
 
