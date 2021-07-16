@@ -65,14 +65,21 @@ public class ReadTask implements Runnable {
                 }
             }
         } else {
+            long num = 0;
+            int firstLen = 0;
             while (buffer.hasRemaining()) {
                 b = buffer.get();
-                // Todo: 这里有问题, 换行一定要从0开始
-                if (b < 48 || b >= 58) {
+                if (b >= 48 && b < 58) {
+                    num = num * 10 + b - 48;
+                    firstLen++;
+                    continue;
+                }
+                if (block.beginLen == 0) block.firstNumLen = firstLen;
+                block.begins[block.beginLen++] = num;
+                num = 0;
+                if (b == 10 || b == 13) {
                     break;
                 }
-                block.beginInput = block.beginInput * 10 + b - 48;
-                block.beginLen++;
             }
         }
         while (buffer.hasRemaining()) {
@@ -86,7 +93,6 @@ public class ReadTask implements Runnable {
     private int nowColIndex;
     private boolean isDouble;
     private int maxDataLen;
-//    private boolean isFirst = false;
 
     private void handleByte(Map<String, MyValuePage> pages, byte b) {
         if (b >= 48) {
@@ -100,10 +106,6 @@ public class ReadTask implements Runnable {
             maxDataLen = 0;
         } else {
             if (isDouble) {
-//                if (!isFirst) {
-//                    isFirst = true;
-//                    System.out.println("HAS DOUBLE!!!");
-//                }
                 inputD += input * Math.pow(0.1, maxDataLen);
             }
             if (maxDataLen > 0) {
@@ -143,12 +145,21 @@ public class ReadTask implements Runnable {
     private void finish(Map<String, MyValuePage> pages, MappedByteBuffer bb) {
         setCurToBlock();
         // 最后一块读完
-        if (table.readCount.get() >= table.blockCount - 1) {
+        int readCount = table.readCount.incrementAndGet();
+//        System.out.println("read: " + table.index + " " + table.readCount.get() + " " + table.blockCount);
+        if (readCount >= table.blockCount) {
             for (int i = 0; i < table.blockCount - 1; ++i) {
                 MyBlock block = table.blocks[i];
                 MyBlock nxtBlock = table.blocks[i + 1];
-                long value = block.lastInput * (long) Math.pow(10, nxtBlock.beginLen) + nxtBlock.beginInput;
-                putData(getPage(pages, block.lastColIndex, value));
+//                System.out.println("mer: " + i + " " + nxtBlock.beginLen);
+                if (nxtBlock.beginLen <= 0 && block.lastInput == 0) continue;
+                long firstValue = block.lastInput * (long) Math.pow(10, nxtBlock.firstNumLen) + nxtBlock.begins[0];
+                putData(getPage(pages, block.lastColIndex, firstValue));
+//                System.out.println("mer: " + firstValue);
+                for (int j = 1; j < nxtBlock.beginLen; ++j) {
+//                    System.out.println("mer: " + nxtBlock.begins[j]);
+                    putData(getPage(pages, block.lastColIndex + j, nxtBlock.begins[j]));
+                }
             }
             table.blocks = null;
             System.out.println("table: " + table.index + " read finished " + (table.readCount.get() + 1));
@@ -163,10 +174,10 @@ public class ReadTask implements Runnable {
                     page.byteBuffer
             );
         });
-        int readCount = table.readCount.incrementAndGet();
-        if (readCount % 100 == 0) {
-            System.out.println("read count: " + readCount + " now:" + System.currentTimeMillis());
+        if (readCount >= table.blockCount) {
+            table.readFinish = true;
         }
+        System.out.println("read count: " + readCount + " now:" + System.currentTimeMillis());
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();

@@ -24,16 +24,14 @@ public class MyTable {
 
     public AtomicInteger allPageCount = new AtomicInteger(0);
 
+    public boolean readFinish = false;
+
     public MyTable(int blockCount) {
         this.blockCount = blockCount;
         blocks = new MyBlock[blockCount];
     }
 
-    public boolean readFinished() {
-        return readCount.get() >= blockCount;
-    }
-
     public boolean finished() {
-        return readFinished() && writeCount.get() >= allPageCount.get();
+        return readFinish && writeCount.get() >= allPageCount.get();
     }
 }

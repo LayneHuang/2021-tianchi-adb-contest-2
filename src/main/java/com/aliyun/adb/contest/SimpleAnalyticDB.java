@@ -65,7 +65,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
         }
     }
 
-    private boolean debug = true;
+    private boolean debug = false;
 
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {

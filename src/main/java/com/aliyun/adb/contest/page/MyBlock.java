@@ -22,7 +22,10 @@ public class MyBlock {
 
     public double lastInputD;
 
+    public int firstNumLen = -1;
+
     public int beginLen;
 
-    public long beginInput;
+    public long[] begins = new long[50];
+
 }
