@@ -26,8 +26,8 @@ public class WritePool {
             checkFinished(table);
             return;
         }
-//        executor.execute(() -> handleBlock(table, path, buffer));
-        checkFinished(table);
+        executor.execute(() -> handleBlock(table, path, buffer));
+//        checkFinished(table);
     }
 
     private void handleBlock(MyTable table, Path path, ByteBuffer buffer) {
@@ -48,7 +48,7 @@ public class WritePool {
     private void checkFinished(MyTable table) {
         int writeCount = table.writeCount.incrementAndGet();
 //        if (writeCount % 100000 == 0) {
-//            System.out.println("table " + table.index + ", write count: " + writeCount + " now:" + System.currentTimeMillis());
+        System.out.println("table " + table.index + ", write count: " + writeCount + " pageCount: " + table.allPageCount.get() + ", now:" + System.currentTimeMillis());
 //        }
         if (table.finished()) {
             System.out.println("table " + table.index + " write finished");

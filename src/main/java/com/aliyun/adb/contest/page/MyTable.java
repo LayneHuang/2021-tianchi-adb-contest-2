@@ -29,10 +29,6 @@ public class MyTable {
         blocks = new MyBlock[blockCount];
     }
 
-    public void addAllPageCount() {
-        allPageCount.incrementAndGet();
-    }
-
     public boolean readFinished() {
         return readCount.get() >= blockCount;
     }

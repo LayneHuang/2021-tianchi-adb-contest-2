@@ -130,7 +130,7 @@ public class ReadTask implements Runnable {
     private void putLong(MyValuePage page) {
         page.add(input);
         if (!page.byteBuffer.hasRemaining()) {
-            table.addAllPageCount();
+            table.allPageCount.incrementAndGet();
             writePool.execute(
                     table,
                     Constant.getPath(page),
@@ -152,13 +152,10 @@ public class ReadTask implements Runnable {
             }
             table.allPageCount.addAndGet(pages.size());
             table.blocks = null;
-            System.out.println("table: " + table.index + " read finished " + table.readCount.get() + 1);
-        }
-        int readCount = table.readCount.incrementAndGet();
-        if (readCount % 100 == 0) {
-            System.out.println("read count: " + readCount + " now:" + System.currentTimeMillis());
+            System.out.println("table: " + table.index + " read finished " + (table.readCount.get() + 1));
         }
         pages.forEach((key, page) -> {
+            table.allPageCount.incrementAndGet();
             table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] += page.dataCount;
             writePool.execute(
                     table,
@@ -166,6 +163,10 @@ public class ReadTask implements Runnable {
                     page.byteBuffer
             );
         });
+        int readCount = table.readCount.incrementAndGet();
+        if (readCount % 100 == 0) {
+            System.out.println("read count: " + readCount + " now:" + System.currentTimeMillis());
+        }
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();
