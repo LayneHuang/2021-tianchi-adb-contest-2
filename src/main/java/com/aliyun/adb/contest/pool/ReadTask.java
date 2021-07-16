@@ -150,11 +150,11 @@ public class ReadTask implements Runnable {
                 long value = block.lastInput * (long) Math.pow(10, nxtBlock.beginLen) + nxtBlock.beginInput;
                 putData(getPage(pages, block.lastColIndex, value));
             }
-            table.allPageCount.addAndGet(pages.size());
             table.blocks = null;
             System.out.println("table: " + table.index + " read finished " + (table.readCount.get() + 1));
         }
         pages.forEach((key, page) -> {
+            if (page.byteBuffer == null) return;
             table.allPageCount.incrementAndGet();
             table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] += page.dataCount;
             writePool.execute(
