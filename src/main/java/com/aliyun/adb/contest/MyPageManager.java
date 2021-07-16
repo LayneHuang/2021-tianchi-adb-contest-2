@@ -13,6 +13,7 @@ public final class MyPageManager {
 
     public static long find(MyTable table, int tIdx, int cIdx, double percentile) throws IOException {
         long rank = Math.round(table.dataCount * percentile) - 1;
+        if (rank < 0) rank = 0;
         System.out.println("percentile: " + percentile + ", rank: " + rank);
         long offset = 0;
         for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {

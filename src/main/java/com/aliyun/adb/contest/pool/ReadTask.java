@@ -109,7 +109,7 @@ public class ReadTask implements Runnable {
                 inputD += input * Math.pow(0.1, maxDataLen);
             }
             if (maxDataLen > 0) {
-                putData(getPage(pages, nowColIndex, input));
+                putData(getPage(pages, nowColIndex));
             }
             maxDataLen = 0;
             isDouble = false;
@@ -119,6 +119,7 @@ public class ReadTask implements Runnable {
     }
 
     private void putData(MyValuePage page) {
+        if (input == 0) return;
         if (isDouble) {
             putDouble();
         } else {
@@ -150,11 +151,11 @@ public class ReadTask implements Runnable {
             for (int i = 0; i < table.blockCount - 1; ++i) {
                 MyBlock block = table.blocks[i];
                 MyBlock nxtBlock = table.blocks[i + 1];
-                if (nxtBlock.beginLen <= 0 && block.lastInput == 0) continue;
-                long firstValue = block.lastInput * (long) Math.pow(10, nxtBlock.firstNumLen) + nxtBlock.begins[0];
-                putData(getPage(pages, block.lastColIndex, firstValue));
+                input = block.lastInput * (long) Math.pow(10, nxtBlock.firstNumLen) + nxtBlock.begins[0];
+                putData(getPage(pages, block.lastColIndex));
                 for (int j = 1; j < nxtBlock.beginLen; ++j) {
-                    putData(getPage(pages, block.lastColIndex + j, nxtBlock.begins[j]));
+                    input = nxtBlock.begins[j];
+                    putData(getPage(pages, block.lastColIndex + j));
                 }
             }
             table.blocks = null;
@@ -187,8 +188,8 @@ public class ReadTask implements Runnable {
         block.isD = isDouble;
     }
 
-    private MyValuePage getPage(Map<String, MyValuePage> pages, int colIndex, long value) {
-        int pageIndex = Constant.getPageIndex(value);
+    private MyValuePage getPage(Map<String, MyValuePage> pages, int colIndex) {
+        int pageIndex = Constant.getPageIndex(input);
         String key = getKey(colIndex, pageIndex);
         if (!pages.containsKey(key)) {
             MyValuePage page = new MyValuePage();
