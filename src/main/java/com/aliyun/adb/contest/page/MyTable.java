@@ -34,10 +34,10 @@ public class MyTable {
     }
 
     public boolean readFinished() {
-        return readCount.get() == blockCount;
+        return readCount.get() >= blockCount;
     }
 
     public boolean finished() {
-        return readFinished() && writeCount.get() == allPageCount.get();
+        return readFinished() && writeCount.get() >= allPageCount.get();
     }
 }

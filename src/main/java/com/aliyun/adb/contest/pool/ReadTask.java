@@ -143,7 +143,7 @@ public class ReadTask implements Runnable {
     private void finish(Map<String, MyValuePage> pages, MappedByteBuffer bb) {
         setCurToBlock();
         // 最后一块读完
-        if (table.readCount.get() == table.blockCount - 1) {
+        if (table.readCount.get() >= table.blockCount - 1) {
             for (int i = 0; i < table.blockCount - 1; ++i) {
                 MyBlock block = table.blocks[i];
                 MyBlock nxtBlock = table.blocks[i + 1];
