@@ -147,6 +147,7 @@ public class ReadTask implements Runnable {
         setCurToBlock();
         // 最后一块读完
         int readCount = table.readCount.incrementAndGet();
+        if (readCount % 100 == 0) System.out.println("now read: " + readCount + ", " + System.currentTimeMillis());
         if (readCount >= table.blockCount) {
             for (int i = 0; i < table.blockCount - 1; ++i) {
                 MyBlock block = table.blocks[i];
