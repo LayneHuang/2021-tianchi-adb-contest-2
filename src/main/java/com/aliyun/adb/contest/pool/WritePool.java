@@ -50,7 +50,7 @@ public class WritePool {
 //        if (writeCount % 100000 == 0) {
 //            System.out.println("table " + table.index + ", write count: " + writeCount + " now:" + System.currentTimeMillis());
 //        }
-        if (table.readFinished()) {
+        if (table.finished()) {
             System.out.println("table " + table.index + " write finished");
             latch.countDown();
         }
