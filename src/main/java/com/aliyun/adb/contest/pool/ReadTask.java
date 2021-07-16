@@ -146,17 +146,14 @@ public class ReadTask implements Runnable {
         setCurToBlock();
         // 最后一块读完
         int readCount = table.readCount.incrementAndGet();
-//        System.out.println("read: " + table.index + " " + table.readCount.get() + " " + table.blockCount);
         if (readCount >= table.blockCount) {
             for (int i = 0; i < table.blockCount - 1; ++i) {
                 MyBlock block = table.blocks[i];
                 MyBlock nxtBlock = table.blocks[i + 1];
-//                System.out.println("mer: " + i + " " + nxtBlock.beginLen);
                 if (nxtBlock.beginLen <= 0 && block.lastInput == 0) continue;
                 long firstValue = block.lastInput * (long) Math.pow(10, nxtBlock.firstNumLen) + nxtBlock.begins[0];
                 putData(getPage(pages, block.lastColIndex, firstValue));
                 for (int j = 1; j < nxtBlock.beginLen; ++j) {
-//                    System.out.println("mer: " + nxtBlock.begins[j]);
                     putData(getPage(pages, block.lastColIndex + j, nxtBlock.begins[j]));
                 }
             }
@@ -175,8 +172,8 @@ public class ReadTask implements Runnable {
         });
         if (readCount >= table.blockCount) {
             table.readFinish = true;
+            System.out.println("read finish, now: " + System.currentTimeMillis());
         }
-//        System.out.println("read count: " + readCount + " now:" + System.currentTimeMillis());
         Cleaner cl = ((DirectBuffer) bb).cleaner();
         if (cl != null) {
             cl.clean();
