@@ -31,7 +31,6 @@ public class ReaderPool {
             block.blockIndex = i;
             block.begin = (long) i * Constant.MAPPED_SIZE;
             block.end = Math.min(fileSize - 1, block.begin + Constant.MAPPED_SIZE - 1);
-//            System.out.println("sec: " + block.begin + " " + block.end);
             ReadTask task = new ReadTask(path, table, block, writePool);
             executor.execute(task);
         }

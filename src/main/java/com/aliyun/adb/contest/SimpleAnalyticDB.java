@@ -52,6 +52,9 @@ public class SimpleAnalyticDB implements AnalyticDB {
         }
         latch.await();
         System.out.println("COST TIME : " + (System.currentTimeMillis() - t));
+    }
+
+    private void calTotalSize(int tableSize) {
         for (int i = 0; i < tableSize; ++i) {
             if (tables[i] == null) continue;
             int cnt = 0;
@@ -65,12 +68,12 @@ public class SimpleAnalyticDB implements AnalyticDB {
         }
     }
 
-    private int debug = 0;
+    private int debug = 1;
 
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
-//        if (debug > 9) return "0";
-//        debug++;
+        if (debug > 10) return "0";
+        debug++;
         int tIdx = indexMap.get(table);
         int colIdx = tables[tIdx].colIndexMap.get(column);
         long ans = MyPageManager.find(tables[tIdx], tIdx, colIdx, percentile);

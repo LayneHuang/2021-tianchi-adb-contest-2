@@ -23,9 +23,9 @@ public class WritePool {
 
     public void execute(MyTable table, Path path, ByteBuffer buffer) {
         if (buffer == null || buffer.position() == 0) {
-            checkFinished(table);
             return;
         }
+        table.allPageCount.incrementAndGet();
         executor.execute(() -> handleBlock(table, path, buffer));
     }
 

@@ -133,7 +133,6 @@ public class ReadTask implements Runnable {
     private void putLong(MyValuePage page) {
         page.add(input);
         if (!page.byteBuffer.hasRemaining()) {
-            table.allPageCount.incrementAndGet();
             writePool.execute(
                     table,
                     Constant.getPath(page),
@@ -147,7 +146,6 @@ public class ReadTask implements Runnable {
         setCurToBlock();
         // 最后一块读完
         int readCount = table.readCount.incrementAndGet();
-        if (readCount % 100 == 0) System.out.println("now read: " + readCount + ", " + System.currentTimeMillis());
         if (readCount >= table.blockCount) {
             mergeBlocks(pages);
             table.blocks = null;
@@ -197,13 +195,13 @@ public class ReadTask implements Runnable {
     private void flushRestPage(Map<String, MyValuePage> pages) {
         pages.forEach((key, page) -> {
             if (page.byteBuffer == null) return;
-            table.allPageCount.incrementAndGet();
             table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] += page.dataCount;
             writePool.execute(
                     table,
                     Constant.getPath(page),
                     page.byteBuffer
             );
+            page.byteBuffer = null;
         });
     }
 
