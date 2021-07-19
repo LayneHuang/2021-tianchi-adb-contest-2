@@ -13,13 +13,13 @@ import java.nio.file.Path;
 public final class Constant {
     public static Path WORK_DIR;
     // 线程数
-    public static final int THREAD_COUNT = 8;
+    public static final int THREAD_COUNT = 16;
     // 每个线程的页数
     public static final int PAGE_COUNT = 1000;
     // 内存页每次申请的数组长度
     public static final int ARRAY_LENGTH = 1024 * 1024;
     // 文件页单次写入磁盘的页大小
-    public static final int WRITE_SIZE = 64 * 1024;
+    public static final int WRITE_SIZE = 32 * 1024;
     // MappedByteBuffer 单次读取的大小
     public static final int MAPPED_SIZE = 128 * 1024 * 1024;
 

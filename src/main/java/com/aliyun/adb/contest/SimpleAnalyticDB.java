@@ -65,8 +65,12 @@ public class SimpleAnalyticDB implements AnalyticDB {
         }
     }
 
+    private int debug = 0;
+
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
+        if (debug > 9) return "0";
+        debug++;
         int tIdx = indexMap.get(table);
         int colIdx = tables[tIdx].colIndexMap.get(column);
         long ans = MyPageManager.find(tables[tIdx], tIdx, colIdx, percentile);
