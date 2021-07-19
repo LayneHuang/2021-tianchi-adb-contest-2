@@ -14,12 +14,12 @@ public final class MyPageManager {
     public static long find(MyTable table, int tIdx, int cIdx, double percentile) throws IOException {
         long rank = Math.round(table.dataCount * percentile) - 1;
         if (rank < 0) rank = 0;
-        System.out.println("percentile: " + percentile + ", rank: " + rank);
+//        System.out.println("percentile: " + percentile + ", rank: " + rank);
         long offset = 0;
         for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
             int pageSize = getPageSize(table, cIdx, pIdx);
             if (rank <= offset + pageSize) {
-                System.out.println("Found in Page: " + pIdx);
+//                System.out.println("Found in Page: " + pIdx);
                 long[] data = new long[pageSize];
                 int index = 0;
                 for (int bIdx = 0; bIdx < table.blockCount; bIdx++) {

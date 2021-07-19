@@ -149,29 +149,11 @@ public class ReadTask implements Runnable {
         int readCount = table.readCount.incrementAndGet();
         if (readCount % 100 == 0) System.out.println("now read: " + readCount + ", " + System.currentTimeMillis());
         if (readCount >= table.blockCount) {
-            for (int i = 0; i < table.blockCount - 1; ++i) {
-                MyBlock block = table.blocks[i];
-                MyBlock nxtBlock = table.blocks[i + 1];
-                input = block.lastInput * (long) Math.pow(10, nxtBlock.firstNumLen) + nxtBlock.begins[0];
-                putData(getPage(pages, block.lastColIndex));
-                for (int j = 1; j < nxtBlock.beginLen; ++j) {
-                    input = nxtBlock.begins[j];
-                    putData(getPage(pages, block.lastColIndex + j));
-                }
-            }
+            mergeBlocks(pages);
             table.blocks = null;
             System.out.println("table: " + table.index + " read finished " + (table.readCount.get() + 1));
         }
-        pages.forEach((key, page) -> {
-            if (page.byteBuffer == null) return;
-            table.allPageCount.incrementAndGet();
-            table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] += page.dataCount;
-            writePool.execute(
-                    table,
-                    Constant.getPath(page),
-                    page.byteBuffer
-            );
-        });
+        flushRestPage(pages);
         if (readCount >= table.blockCount) {
             table.readFinish = true;
             System.out.println("read finish, now: " + System.currentTimeMillis());
@@ -182,11 +164,47 @@ public class ReadTask implements Runnable {
         }
     }
 
+    /**
+     * 记录每个 Block 最后一个值, 用来合并 Block
+     */
     private void setCurToBlock() {
         block.lastColIndex = nowColIndex;
         block.lastInput = input;
         block.lastInputD = inputD;
         block.isD = isDouble;
+    }
+
+    /**
+     * 处理 Blocks 的边缘值
+     */
+    private void mergeBlocks(Map<String, MyValuePage> pages) {
+        for (int i = 0; i < table.blockCount - 1; ++i) {
+            MyBlock block = table.blocks[i];
+            MyBlock nxtBlock = table.blocks[i + 1];
+            input = block.lastInput * (long) Math.pow(10, nxtBlock.firstNumLen) + nxtBlock.begins[0];
+            putData(getPage(pages, block.lastColIndex));
+            for (int j = 1; j < nxtBlock.beginLen; ++j) {
+                input = nxtBlock.begins[j];
+                putData(getPage(pages, block.lastColIndex + j));
+            }
+        }
+        table.blocks = null;
+    }
+
+    /**
+     * 剩下的 Page 落盘
+     */
+    private void flushRestPage(Map<String, MyValuePage> pages) {
+        pages.forEach((key, page) -> {
+            if (page.byteBuffer == null) return;
+            table.allPageCount.incrementAndGet();
+            table.pageCounts[page.blockIndex][page.pageIndex][page.columnIndex] += page.dataCount;
+            writePool.execute(
+                    table,
+                    Constant.getPath(page),
+                    page.byteBuffer
+            );
+        });
     }
 
     private MyValuePage getPage(Map<String, MyValuePage> pages, int colIndex) {
