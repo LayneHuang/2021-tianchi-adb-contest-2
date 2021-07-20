@@ -41,7 +41,15 @@ public class WritePool {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        checkFinished(table);
+//        checkFinished(table);
+        checkJustCountDown(table);
+    }
+
+    public void checkJustCountDown(MyTable table) {
+        int readCount = table.readCount.incrementAndGet();
+        if (readCount >= table.blockCount) {
+            latch.countDown();
+        }
     }
 
     private void checkFinished(MyTable table) {

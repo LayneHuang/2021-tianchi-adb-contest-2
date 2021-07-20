@@ -8,6 +8,7 @@ import sun.misc.Cleaner;
 import sun.nio.ch.DirectBuffer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -15,13 +16,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ReadTask implements Runnable {
-    private MyTable table;
+    private final MyTable table;
 
-    private MyBlock block;
+    private final MyBlock block;
 
-    private Path path;
+    private final Path path;
 
-    private WritePool writePool;
+    private final WritePool writePool;
 
     ReadTask(Path path, MyTable table, MyBlock block, WritePool writePool) {
         this.path = path;
@@ -38,13 +39,43 @@ public class ReadTask implements Runnable {
                     block.begin,
                     block.getSize()
             );
-            trans(block, buffer.load());
+            // trans(buffer.load());
+//            notTrans(buffer.load());
+            notTransNotWrite(buffer.load());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void trans(MyBlock block, MappedByteBuffer buffer) {
+    private void notTransNotWrite(MappedByteBuffer originBuffer) {
+        ByteBuffer buffer = null;
+        while (originBuffer.hasRemaining()) {
+            if (buffer == null) {
+                buffer = ByteBuffer.allocate(Constant.WRITE_SIZE);
+            }
+            buffer.put(originBuffer.get());
+            if (!buffer.hasRemaining()) {
+                buffer = null;
+            }
+        }
+        writePool.checkJustCountDown(table);
+    }
+
+    private void notTrans(MappedByteBuffer originBuffer) {
+        ByteBuffer buffer = null;
+        while (originBuffer.hasRemaining()) {
+            if (buffer == null) {
+                buffer = ByteBuffer.allocate(Constant.WRITE_SIZE);
+            }
+            buffer.put(originBuffer.get());
+            if (!buffer.hasRemaining()) {
+                writePool.execute(table, Constant.getPath(table.index, 0, block.blockIndex, 0), buffer);
+                buffer = null;
+            }
+        }
+    }
+
+    private void trans(MappedByteBuffer buffer) {
         Map<String, MyValuePage> pages = new HashMap<>();
         byte b;
         if (block.blockIndex == 0) {
