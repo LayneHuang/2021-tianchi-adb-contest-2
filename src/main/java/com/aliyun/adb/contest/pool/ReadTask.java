@@ -42,8 +42,8 @@ public class ReadTask implements Runnable {
             long begin = System.currentTimeMillis();
             // trans(buffer.load());
             // notTrans(buffer.load());
-             notTransNotWrite(buffer);
-//            transNumberNotWrite(buffer);
+//             notTransNotWrite(buffer);
+            transNumberNotWrite(buffer);
             Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
             if (cleaner != null) {
                 cleaner.clean();
@@ -71,21 +71,26 @@ public class ReadTask implements Runnable {
         writePool.checkJustCountDown(table);
     }
 
+    private void handleLong(long l){
+        // DO NOTHING
+    }
+
     private void transNumberNotWrite(MappedByteBuffer originBuffer) {
-        ByteBuffer buffer = null;
+//        ByteBuffer buffer = null;
         while (originBuffer.hasRemaining()) {
-            if (buffer == null) {
-                buffer = ByteBuffer.allocate(Constant.WRITE_SIZE);
-            }
+//            if (buffer == null) {
+//                buffer = ByteBuffer.allocate(Constant.WRITE_SIZE);
+//            }
             byte b = originBuffer.get();
             if (b >= 48 && b < 58) {
                 input = input * 10 + b - 48;
             } else {
                 input = 0;
-                buffer.putLong(input);
-                if (!buffer.hasRemaining()) {
-                    buffer.clear();
-                }
+                handleLong(input);
+//                buffer.putLong(input);
+//                if (!buffer.hasRemaining()) {
+//                    buffer.clear();
+//                }
             }
         }
         writePool.checkJustCountDown(table);
