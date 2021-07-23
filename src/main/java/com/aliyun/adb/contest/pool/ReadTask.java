@@ -39,10 +39,11 @@ public class ReadTask implements Runnable {
                     block.begin,
                     block.getSize()
             );
-            // trans(buffer.load());
-//            notTrans(buffer.load());
             long begin = System.currentTimeMillis();
-            notTransNotWrite(buffer.load());
+            // trans(buffer.load());
+            // notTrans(buffer.load());
+            // notTransNotWrite(buffer.load());
+            transNumberNotWrite(buffer.load());
             System.out.println("single block read cost: " + (System.currentTimeMillis() - begin));
         } catch (IOException e) {
             e.printStackTrace();
@@ -58,6 +59,26 @@ public class ReadTask implements Runnable {
             buffer.put(originBuffer.get());
             if (!buffer.hasRemaining()) {
                 buffer = null;
+            }
+        }
+        writePool.checkJustCountDown(table);
+    }
+
+    private void transNumberNotWrite(MappedByteBuffer originBuffer) {
+        ByteBuffer buffer = null;
+        while (originBuffer.hasRemaining()) {
+            if (buffer == null) {
+                buffer = ByteBuffer.allocate(Constant.WRITE_SIZE);
+            }
+            byte b = originBuffer.get();
+            if (b >= 48 && b < 58) {
+                input = input * 10 + b - 48;
+            } else {
+                input = 0;
+                buffer.putLong(input);
+                if (!buffer.hasRemaining()) {
+                    buffer = null;
+                }
             }
         }
         writePool.checkJustCountDown(table);
