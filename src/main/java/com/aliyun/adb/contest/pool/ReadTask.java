@@ -55,15 +55,16 @@ public class ReadTask implements Runnable {
     }
 
     private void notTransNotWrite(MappedByteBuffer originBuffer) {
-        ByteBuffer buffer = null;
+//        ByteBuffer buffer = null;
         while (originBuffer.hasRemaining()) {
-            if (buffer == null) {
-                buffer = ByteBuffer.allocate(Constant.WRITE_SIZE);
-            }
-            buffer.put(originBuffer.get());
-            if (!buffer.hasRemaining()) {
-                buffer.clear();
-            }
+//            if (buffer == null) {
+//                buffer = ByteBuffer.allocate(Constant.WRITE_SIZE);
+//            }
+            originBuffer.get();
+//            buffer.put(originBuffer.get());
+//            if (!buffer.hasRemaining()) {
+//                buffer.clear();
+//            }
         }
         writePool.checkJustCountDown(table);
     }
