@@ -42,8 +42,12 @@ public class ReadTask implements Runnable {
             long begin = System.currentTimeMillis();
             // trans(buffer.load());
             // notTrans(buffer.load());
-             notTransNotWrite(buffer);
-//            transNumberNotWrite(buffer);
+//             notTransNotWrite(buffer);
+            transNumberNotWrite(buffer);
+            Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
+            if (cleaner != null) {
+                cleaner.clean();
+            }
             System.out.println("single block read cost: " + (System.currentTimeMillis() - begin));
         } catch (IOException e) {
             e.printStackTrace();
@@ -77,7 +81,7 @@ public class ReadTask implements Runnable {
                 input = 0;
                 buffer.putLong(input);
                 if (!buffer.hasRemaining()) {
-                    buffer = null;
+                    buffer.clear();
                 }
             }
         }
