@@ -42,8 +42,8 @@ public class ReadTask implements Runnable {
             long begin = System.currentTimeMillis();
             // trans(buffer.load());
             // notTrans(buffer.load());
-//             notTransNotWrite(buffer);
-            transNumberNotWrite(buffer);
+             notTransNotWrite(buffer);
+//            transNumberNotWrite(buffer);
             Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
             if (cleaner != null) {
                 cleaner.clean();
