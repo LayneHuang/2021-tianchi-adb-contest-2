@@ -58,7 +58,7 @@ public class ReadTask implements Runnable {
             }
             buffer.put(originBuffer.get());
             if (!buffer.hasRemaining()) {
-                buffer = null;
+                buffer.clear();
             }
         }
         writePool.checkJustCountDown(table);
