@@ -43,7 +43,7 @@ public class ReadTask implements Runnable {
             // trans(buffer.load());
             // notTrans(buffer.load());
             // notTransNotWrite(buffer.load());
-            transNumberNotWrite(buffer.load());
+            transNumberNotWrite(buffer);
             System.out.println("single block read cost: " + (System.currentTimeMillis() - begin));
         } catch (IOException e) {
             e.printStackTrace();

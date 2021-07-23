@@ -18,8 +18,9 @@ public class ReaderPool {
 
     public MyTable start(int tableIndex, Path path, WritePool writePool) {
         long fileSize = getFileSize(path);
-        int blockCount = (int) (fileSize / Constant.MAPPED_SIZE)
-                + (fileSize % Constant.MAPPED_SIZE == 0 ? 0 : 1);
+//        int blockCount = (int) (fileSize / Constant.MAPPED_SIZE)
+//                + (fileSize % Constant.MAPPED_SIZE == 0 ? 0 : 1);
+        int blockCount = Constant.THREAD_COUNT;
         System.out.println("table " + tableIndex + ", block count:" + blockCount);
         MyTable table = new MyTable(blockCount);
         table.index = tableIndex;
