@@ -48,7 +48,7 @@ public class ReadTask implements Runnable {
             if (cleaner != null) {
                 cleaner.clean();
             }
-            System.out.println("single block read cost: " + (System.currentTimeMillis() - begin));
+            System.out.println(block.tableIndex + " " + block.blockIndex +" single block read cost: " + (System.currentTimeMillis() - begin));
         } catch (IOException e) {
             e.printStackTrace();
         }
