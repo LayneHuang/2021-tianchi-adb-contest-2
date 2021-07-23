@@ -19,7 +19,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
     private final WritePool writePool = new WritePool();
     private final ReaderPool readerPool = new ReaderPool();
     private MyTable[] tables = null;
-    private Map<String, Integer> indexMap = new HashMap<>();
+    private final Map<String, Integer> indexMap = new HashMap<>();
 
     /**
      * The implementation must contain a public no-argument constructor.

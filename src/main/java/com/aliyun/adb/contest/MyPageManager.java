@@ -19,7 +19,7 @@ public final class MyPageManager {
         for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
             int pageSize = getPageSize(table, cIdx, pIdx);
             if (rank <= offset + pageSize) {
-//                System.out.println("Found in Page: " + pIdx);
+                // System.out.println("Found in Page: " + pIdx + ", PageSize: " + pageSize);
                 long[] data = new long[pageSize];
                 int index = 0;
                 for (int bIdx = 0; bIdx < table.blockCount; bIdx++) {
