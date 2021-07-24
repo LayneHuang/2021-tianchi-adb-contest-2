@@ -19,6 +19,8 @@ public class MyValuePage {
      */
     public int blockIndex;
 
+    public int threadIndex;
+
     /**
      * 这一块中的某一页 [0,distance), [distance,2*distance-1), ...[ , Long.Max)
      */

@@ -12,8 +12,6 @@ import java.nio.file.Path;
  */
 public final class Constant {
     public static Path WORK_DIR;
-    public static final boolean IS_DEBUG = false;
-    public static final int DATA_SIZE = IS_DEBUG ? 10000 : 1000000000;
     // 线程数
     public static final int THREAD_COUNT = 10;
     // 每个线程的页数
@@ -53,16 +51,16 @@ public final class Constant {
         return Constant.WORK_DIR.resolve(
                 "t" + page.tableIndex +
                         "_c" + page.columnIndex +
-                        "_b" + page.blockIndex +
+                        "_t" + page.threadIndex +
                         "_p" + page.pageIndex
         );
     }
 
-    public static Path getPath(int tIdx, int cIdx, int bIdx, int pIdx) {
+    public static Path getPath(int tableIdx, int cIdx, int threadIdx, int pIdx) {
         return Constant.WORK_DIR.resolve(
-                "t" + tIdx +
+                "t" + tableIdx +
                         "_c" + cIdx +
-                        "_b" + bIdx +
+                        "_t" + threadIdx +
                         "_p" + pIdx
         );
     }

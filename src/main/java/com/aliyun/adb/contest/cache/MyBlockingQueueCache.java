@@ -1,6 +1,8 @@
 package com.aliyun.adb.contest.cache;
 
-import java.nio.MappedByteBuffer;
+import com.aliyun.adb.contest.pool.WriteTask;
+
+import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -10,17 +12,24 @@ import java.util.concurrent.LinkedBlockingDeque;
  * @Date 2021/6/3 16:38
  * @Created by FinkyS
  */
-public final class MyBlockingQueueCache extends MyCache {
+public final class MyBlockingQueueCache {
 
-    private final BlockingQueue<MappedByteBuffer> bq = new LinkedBlockingDeque<>(2);
+    private final BlockingQueue<WriteTask> bq = new LinkedBlockingDeque<>(2);
 
-    @Override
-    public MappedByteBuffer poll() throws InterruptedException {
-        return bq.take();
+    public WriteTask poll()  {
+        try {
+            return bq.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
-    @Override
-    public void put(MappedByteBuffer buffer) throws InterruptedException {
-        bq.put(buffer);
+    public void put(WriteTask task)  {
+        try {
+            bq.put(task);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

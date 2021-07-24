@@ -26,12 +26,16 @@ public class MyTable {
 
     public boolean readFinish = false;
 
-    public MyTable(int blockCount) {
-        this.blockCount = blockCount;
-        blocks = new MyBlock[blockCount];
-    }
-
     public boolean finished() {
         return readFinish && writeCount.get() >= allPageCount.get();
+    }
+
+    public synchronized void initBlocks(int blockCount) {
+        if (this.blockCount > 0) return;
+        this.blockCount = blockCount;
+        blocks = new MyBlock[blockCount];
+        for (int i = 0; i < blockCount; ++i) {
+            blocks[i] = new MyBlock();
+        }
     }
 }

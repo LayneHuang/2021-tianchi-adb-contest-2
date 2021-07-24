@@ -12,9 +12,9 @@ import java.util.Arrays;
 public final class MyPageManager {
 
     public static long find(MyTable table, int tIdx, int cIdx, double percentile) throws IOException {
-        long rank = Math.round(Constant.DATA_SIZE * percentile) - 1;
+        long rank = Math.round(table.dataCount * percentile) - 1;
         if (rank < 0) rank = 0;
-//        System.out.println("percentile: " + percentile + ", rank: " + rank);
+        // System.out.println("percentile: " + percentile + ", rank: " + rank);
         long offset = 0;
         for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
             int pageSize = getPageSize(table, cIdx, pIdx);
@@ -22,10 +22,10 @@ public final class MyPageManager {
                 // System.out.println("Found in Page: " + pIdx + ", PageSize: " + pageSize);
                 long[] data = new long[pageSize];
                 int index = 0;
-                for (int bIdx = 0; bIdx < table.blockCount; bIdx++) {
-                    if (table.pageCounts[bIdx][pIdx][cIdx] == 0) continue;
-                    Path path = Constant.getPath(tIdx, cIdx, bIdx, pIdx);
-                    ByteBuffer buffer = ByteBuffer.allocate(table.pageCounts[bIdx][pIdx][cIdx] * Long.BYTES);
+                for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; threadIdx++) {
+                    if (table.pageCounts[threadIdx][pIdx][cIdx] == 0) continue;
+                    Path path = Constant.getPath(tIdx, cIdx, threadIdx, pIdx);
+                    ByteBuffer buffer = ByteBuffer.allocate(table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES);
                     try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
                         while (channel.read(buffer) > 0) {
                             buffer.flip();
@@ -38,6 +38,8 @@ public final class MyPageManager {
                     }
                 }
                 Arrays.parallelSort(data);
+                // showData(data);
+                // System.out.println("idx: " + (rank - offset));
                 return data[(int) (rank - offset)];
             }
             offset += pageSize;
@@ -47,9 +49,14 @@ public final class MyPageManager {
 
     private static int getPageSize(MyTable table, int cIdx, int pIdx) {
         int pageSize = 0;
-        for (int bIdx = 0; bIdx < table.blockCount; bIdx++) {
-            pageSize += table.pageCounts[bIdx][pIdx][cIdx];
+        for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; threadIdx++) {
+            pageSize += table.pageCounts[threadIdx][pIdx][cIdx];
         }
         return pageSize;
+    }
+
+    private static void showData(long[] data) {
+        for (long d : data) System.out.print(d + " ");
+        System.out.println();
     }
 }
