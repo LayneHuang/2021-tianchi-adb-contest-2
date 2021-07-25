@@ -9,15 +9,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SimpleAnalyticDB implements AnalyticDB {
-    private MyTable[] tables = null;
+    private List<MyTable> tables = new ArrayList<>();
     private final Map<String, Integer> indexMap = new HashMap<>();
-
     private static final ReadThread[] rThreads = new ReadThread[Constant.THREAD_COUNT];
     private static final WriteThread[] wThreads = new WriteThread[Constant.THREAD_COUNT];
 
@@ -34,8 +34,6 @@ public class SimpleAnalyticDB implements AnalyticDB {
         Path dirPath = Paths.get(tpchDataFileDir);
         List<Path> tablePaths = Files.list(dirPath).collect(Collectors.toList());
         // 等待所有表跑完
-        int tableSize = tablePaths.size();
-        tables = new MyTable[tableSize];
         System.out.printf("table count: %d\n", tablePaths.size());
         int tableIndex = 0;
         for (Path path : tablePaths) {
@@ -43,9 +41,10 @@ public class SimpleAnalyticDB implements AnalyticDB {
                 // 跳过结果数据
                 continue;
             }
-            tables[tableIndex] = new MyTable();
-            tables[tableIndex].index = tableIndex;
-            tables[tableIndex].path = path;
+            MyTable table = new MyTable();
+            table.index = tableIndex;
+            table.path = path;
+            tables.add(table);
             indexMap.put(path.getFileName().toString(), tableIndex);
             tableIndex++;
         }
@@ -54,26 +53,25 @@ public class SimpleAnalyticDB implements AnalyticDB {
             wThreads[i] = new WriteThread();
             rThreads[i].bq = wThreads[i].bq;
             rThreads[i].tId = i;
-            rThreads[i].allTables = tables;
+            rThreads[i].tables = tables;
         }
         for (ReadThread thread : rThreads) thread.start();
         for (WriteThread thread : wThreads) thread.start();
         for (WriteThread thread : wThreads) thread.join();
         System.out.println("COST TIME : " + (System.currentTimeMillis() - t));
-        calTotalSize(tableIndex);
+        calTotalSize();
     }
 
-    private void calTotalSize(int tableSize) {
-        for (int i = 0; i < tableSize; ++i) {
-            if (tables[i] == null) continue;
+    private void calTotalSize() {
+        for (MyTable table : tables) {
             int cnt = 0;
             for (int j = 0; j < Constant.THREAD_COUNT; ++j) {
                 for (int k = 0; k < Constant.PAGE_COUNT; ++k) {
-                    cnt += tables[i].pageCounts[j][k][0];
+                    cnt += table.pageCounts[j][k][0];
                 }
             }
-            tables[i].dataCount = cnt;
-            System.out.println("table " + i + ": " + cnt);
+            table.dataCount = cnt;
+            System.out.println("table: " + cnt);
         }
     }
 
@@ -81,11 +79,11 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
-        if (debug > 15) return "0";
+        if (debug > 30) return "0";
         debug++;
         int tIdx = indexMap.get(table);
-        int colIdx = tables[tIdx].colIndexMap.get(column);
-        long ans = MyPageManager.find(tables[tIdx], tIdx, colIdx, percentile);
+        int colIdx = tables.get(tIdx).colIndexMap.get(column);
+        long ans = MyPageManager.find(tables.get(tIdx), tIdx, colIdx, percentile);
         // System.out.println("query: " + table + ", column: " + column + ", percentile:" + percentile + ", ans:" + ans);
         return String.valueOf(ans);
     }

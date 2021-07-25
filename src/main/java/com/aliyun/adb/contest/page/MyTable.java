@@ -1,5 +1,7 @@
 package com.aliyun.adb.contest.page;
 
+import com.aliyun.adb.contest.Constant;
+
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,21 +19,11 @@ public class MyTable {
 
     public MyBlock[] blocks;
 
-    public int[][][] pageCounts;
+    public int[][][] pageCounts = new int[Constant.THREAD_COUNT][Constant.PAGE_COUNT][2];
 
     public int dataCount;
 
     public AtomicInteger readCount = new AtomicInteger(0);
-
-    public AtomicInteger writeCount = new AtomicInteger(0);
-
-    public AtomicInteger allPageCount = new AtomicInteger(0);
-
-    public boolean readFinish = false;
-
-    public boolean finished() {
-        return readFinish && writeCount.get() >= allPageCount.get();
-    }
 
     public synchronized void initBlocks(int blockCount) {
         if (this.blockCount > 0) return;

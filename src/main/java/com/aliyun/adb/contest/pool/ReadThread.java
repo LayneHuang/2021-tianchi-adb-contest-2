@@ -10,11 +10,12 @@ import sun.misc.Cleaner;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ReadThread extends Thread {
 
-    public MyTable[] allTables;
+    public List<MyTable> tables;
 
     public MyTable table;
 
@@ -31,71 +32,53 @@ public class ReadThread extends Thread {
 
     @Override
     public void run() {
-        for (MyTable table : allTables) {
-            if (table == null) continue;
-            this.table = table;
+        for (MyTable tmpTable : tables) {
+            table = tmpTable;
             pages.clear();
-            try (FileChannel channel = FileChannel.open(table.path)) {
-
-                long fileSize = channel.size();
-                // 分成多少块
-                int DEFAULT_BLOCK_COUNT = (int) (fileSize / Constant.MAPPED_SIZE)
-                        + (fileSize % Constant.MAPPED_SIZE == 0 ? 0 : 1);
-
-                // 每个线程读多少块
-                int BLOCK_PER_THREAD = (DEFAULT_BLOCK_COUNT / Constant.THREAD_COUNT)
-                        + (DEFAULT_BLOCK_COUNT % Constant.THREAD_COUNT == 0 ? 0 : 1);
-
-                int beginBIdx = tId * BLOCK_PER_THREAD;
-
-                int endBIdx = Math.min(beginBIdx + BLOCK_PER_THREAD, DEFAULT_BLOCK_COUNT);
-
-                if (beginBIdx >= DEFAULT_BLOCK_COUNT) {
-                    bq.put(new WriteTask());
-                    return;
-                }
-
-                table.initBlocks(DEFAULT_BLOCK_COUNT);
-                System.out.println("DEFAULT_BLOCK_COUNT: " + DEFAULT_BLOCK_COUNT + ", BLOCK_PER_THREAD: " + BLOCK_PER_THREAD + ", beginBIdx: " + beginBIdx + ", endIndex: " + endBIdx);
-
-                blockCountInThread = endBIdx - beginBIdx;
-
-                for (int i = 0; i < blockCountInThread; ++i) {
-
-                    int bIdx = beginBIdx + i;
-
-                    long begin = Constant.MAPPED_SIZE * bIdx;
-
-                    long end = Math.min(begin + Constant.MAPPED_SIZE, fileSize);
-
-                    // System.out.println("block " + bIdx + ", begin: " + begin + " ,end: " + end);
-
-                    MappedByteBuffer buffer = channel.map(
-                            FileChannel.MapMode.READ_ONLY,
-                            begin,
-                            end - begin
-                    );
-                    trans(i, table.blocks[bIdx], buffer);
-                    Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
-                    if (cleaner != null) {
-                        cleaner.clean();
-                    }
-                }
-                finish();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            readTable();
         }
         bq.put(new WriteTask());
     }
 
-    public void notTrans(MappedByteBuffer buffer) {
-        long sum = 0;
-        while (buffer.hasRemaining()) {
-            byte b = buffer.get();
-            sum += b;
+    private void readTable() {
+        try (FileChannel channel = FileChannel.open(table.path)) {
+            long fileSize = channel.size();
+            // 分成多少块
+            int DEFAULT_BLOCK_COUNT = (int) (fileSize / Constant.MAPPED_SIZE)
+                    + (fileSize % Constant.MAPPED_SIZE == 0 ? 0 : 1);
+            // 每个线程读多少块
+            int BLOCK_PER_THREAD = (DEFAULT_BLOCK_COUNT / Constant.THREAD_COUNT)
+                    + (DEFAULT_BLOCK_COUNT % Constant.THREAD_COUNT == 0 ? 0 : 1);
+
+            int beginBIdx = tId * BLOCK_PER_THREAD;
+            int endBIdx = Math.min(beginBIdx + BLOCK_PER_THREAD, DEFAULT_BLOCK_COUNT);
+
+            if (beginBIdx >= DEFAULT_BLOCK_COUNT) {
+                return;
+            }
+            table.initBlocks(DEFAULT_BLOCK_COUNT);
+            System.out.println("DEFAULT_BLOCK_COUNT: " + DEFAULT_BLOCK_COUNT + ", BLOCK_PER_THREAD: " + BLOCK_PER_THREAD + ", beginBIdx: " + beginBIdx + ", endIndex: " + endBIdx);
+            blockCountInThread = endBIdx - beginBIdx;
+
+            for (int i = 0; i < blockCountInThread; ++i) {
+                int bIdx = beginBIdx + i;
+                long begin = Constant.MAPPED_SIZE * bIdx;
+                long end = Math.min(begin + Constant.MAPPED_SIZE, fileSize);
+                MappedByteBuffer buffer = channel.map(
+                        FileChannel.MapMode.READ_ONLY,
+                        begin,
+                        end - begin
+                );
+                trans(i, table.blocks[bIdx], buffer);
+                Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
+                if (cleaner != null) {
+                    cleaner.clean();
+                }
+            }
+            finish();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        System.out.println(sum);
     }
 
     private void trans(int bIdxInThread, MyBlock block, MappedByteBuffer buffer) {
@@ -111,7 +94,8 @@ public class ReadThread extends Thread {
                     for (int i = 0; i < names.length; ++i) {
                         table.colIndexMap.put(names[i], i);
                     }
-                    table.pageCounts = new int[Constant.THREAD_COUNT][Constant.PAGE_COUNT][names.length];
+                    // System.out.println("table " + table.index + " init");
+                    // table.pageCounts = new int[Constant.THREAD_COUNT][Constant.PAGE_COUNT][names.length];
                     break;
                 } else {
                     if (b == 13) continue;
@@ -185,7 +169,6 @@ public class ReadThread extends Thread {
         int readCount = table.readCount.addAndGet(blockCountInThread);
         if (readCount >= table.blockCount) {
             mergeBlocks();
-            table.blocks = null;
             System.out.println("table: " + table.index + " read finished, " + readCount + ", " + table.blockCount);
         }
         flushRestPage();
@@ -213,13 +196,15 @@ public class ReadThread extends Thread {
                 putData(getPage(block.lastColIndex + j));
             }
         }
-        table.blocks = null;
     }
 
     /**
      * 剩下的 Page 落盘
      */
-    private void flushRestPage() {
+    private synchronized void flushRestPage() {
+        if (table.pageCounts == null) {
+            System.out.println("table " + table.index + " pageCount not init");
+        }
         pages.forEach((key, page) -> {
             if (page.byteBuffer == null) return;
             table.pageCounts[page.threadIndex][page.pageIndex][page.columnIndex] += page.dataCount;
