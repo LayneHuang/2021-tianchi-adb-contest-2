@@ -32,11 +32,12 @@ public class ReadThread extends Thread {
     @Override
     public void run() {
         for (MyTable table : allTables) {
+            if (table == null) continue;
             this.table = table;
+            pages.clear();
             try (FileChannel channel = FileChannel.open(table.path)) {
 
                 long fileSize = channel.size();
-//            System.out.println("fileSize: " + fileSize);
                 // 分成多少块
                 int DEFAULT_BLOCK_COUNT = (int) (fileSize / Constant.MAPPED_SIZE)
                         + (fileSize % Constant.MAPPED_SIZE == 0 ? 0 : 1);
@@ -75,9 +76,6 @@ public class ReadThread extends Thread {
                             end - begin
                     );
                     trans(i, table.blocks[bIdx], buffer);
-//                notTrans(buffer);
-                    // notTransNotWrite(buffer);
-//                transNumberNotWrite(buffer);
                     Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
                     if (cleaner != null) {
                         cleaner.clean();
@@ -88,6 +86,7 @@ public class ReadThread extends Thread {
                 e.printStackTrace();
             }
         }
+        bq.put(new WriteTask());
     }
 
     public void notTrans(MappedByteBuffer buffer) {
@@ -190,7 +189,6 @@ public class ReadThread extends Thread {
             System.out.println("table: " + table.index + " read finished, " + readCount + ", " + table.blockCount);
         }
         flushRestPage();
-        bq.put(new WriteTask());
     }
 
     /**
