@@ -19,9 +19,9 @@ public final class Constant {
     // 内存页每次申请的数组长度
     public static final int ARRAY_LENGTH = 1024 * 1024;
     // 文件页单次写入磁盘的页大小
-    public static final int WRITE_SIZE = 8 * 1024;
+    public static final int WRITE_SIZE = 64 * 1024;
     // MappedByteBuffer 单次读取的大小
-     public static final long MAPPED_SIZE = 128 * 1024;
+    public static final long MAPPED_SIZE = 32 * 1024 * 1024;
 
     public static int getPageIndex(int value) {
         int distance = Integer.MAX_VALUE / PAGE_COUNT;
