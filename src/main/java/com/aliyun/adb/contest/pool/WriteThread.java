@@ -22,7 +22,7 @@ public class WriteThread extends Thread {
                     task.getPath(),
                     StandardOpenOption.WRITE,
                     StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING
+                    StandardOpenOption.APPEND
             )) {
                 ByteBuffer buffer = task.getBuffer();
                 buffer.flip();
