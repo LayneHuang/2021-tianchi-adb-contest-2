@@ -27,11 +27,14 @@ public final class MyPageManager {
                     Path path = Constant.getPath(tIdx, cIdx, threadIdx, pIdx);
                     ByteBuffer buffer = ByteBuffer.allocate(Constant.READ_SIZE);
                     try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
-                        System.out.println("This file size: " + (channel.size() / 8));
                         while (channel.read(buffer) > 0) {
                             buffer.flip();
                             while (buffer.hasRemaining()) {
                                 long d = buffer.getLong();
+                                if (index >= pageSize) {
+                                    System.out.println("FUCK");
+                                    break;
+                                }
                                 data[index++] = d;
                             }
                             buffer.clear();

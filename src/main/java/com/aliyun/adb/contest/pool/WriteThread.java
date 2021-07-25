@@ -20,7 +20,6 @@ public class WriteThread extends Thread {
             }
             try (FileChannel fileChannel = FileChannel.open(
                     task.getPath(),
-                    StandardOpenOption.WRITE,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.APPEND
             )) {
