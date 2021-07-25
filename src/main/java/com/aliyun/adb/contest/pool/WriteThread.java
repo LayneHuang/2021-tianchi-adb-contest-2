@@ -1,5 +1,6 @@
 package com.aliyun.adb.contest.pool;
 
+import com.aliyun.adb.contest.Constant;
 import com.aliyun.adb.contest.cache.MyBlockingQueueCache;
 
 import java.io.IOException;
@@ -11,6 +12,8 @@ public class WriteThread extends Thread {
 
     public MyBlockingQueueCache bq = new MyBlockingQueueCache();
 
+    private boolean[][] written = new boolean[Constant.PAGE_COUNT][2];
+
     @Override
     public void run() {
         while (true) {
@@ -20,9 +23,11 @@ public class WriteThread extends Thread {
             }
             try (FileChannel fileChannel = FileChannel.open(
                     task.getPath(),
+                    StandardOpenOption.WRITE,
                     StandardOpenOption.CREATE,
-                    StandardOpenOption.APPEND
+                    written[task.getPIdx()][task.getCIdx()] ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING
             )) {
+                written[task.getPIdx()][task.getCIdx()] = true;
                 ByteBuffer buffer = task.getBuffer();
                 buffer.flip();
                 fileChannel.write(buffer);

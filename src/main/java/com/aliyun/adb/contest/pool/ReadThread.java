@@ -159,7 +159,12 @@ public class ReadThread extends Thread {
         if (input == 0) return;
         page.add(input);
         if (!page.byteBuffer.hasRemaining()) {
-            bq.put(new WriteTask(page.byteBuffer, Constant.getPath(page)));
+            bq.put(new WriteTask(
+                    page.byteBuffer,
+                    Constant.getPath(page),
+                    page.columnIndex,
+                    page.pageIndex
+            ));
             page.byteBuffer = null;
         }
     }
@@ -208,7 +213,12 @@ public class ReadThread extends Thread {
         pages.forEach((key, page) -> {
             if (page.byteBuffer == null) return;
             table.pageCounts[page.threadIndex][page.pageIndex][page.columnIndex] += page.dataCount;
-            bq.put(new WriteTask(page.byteBuffer, Constant.getPath(page)));
+            bq.put(new WriteTask(
+                    page.byteBuffer,
+                    Constant.getPath(page),
+                    page.columnIndex,
+                    page.pageIndex
+            ));
             page.byteBuffer = null;
         });
     }
