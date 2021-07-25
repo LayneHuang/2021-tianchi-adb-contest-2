@@ -22,11 +22,13 @@ public final class MyPageManager {
                 // System.out.println("Found in Page: " + pIdx + ", PageSize: " + pageSize);
                 long[] data = new long[pageSize];
                 int index = 0;
+                long fileSize = 0;
                 for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; threadIdx++) {
                     if (table.pageCounts[threadIdx][pIdx][cIdx] == 0) continue;
                     Path path = Constant.getPath(tIdx, cIdx, threadIdx, pIdx);
-                    ByteBuffer buffer = ByteBuffer.allocate(Constant.READ_SIZE);
+                    ByteBuffer buffer = ByteBuffer.allocate(table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES);
                     try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+                        fileSize += channel.size() / 8;
                         while (channel.read(buffer) > 0) {
                             buffer.flip();
                             while (buffer.hasRemaining()) {
@@ -43,7 +45,7 @@ public final class MyPageManager {
                 }
                 Arrays.parallelSort(data);
                 showData(data);
-                System.out.println("page size:" + pageSize + ", index size:" + index);
+                System.out.println("page size:" + pageSize + ", index size:" + index + ", fileSize:" + fileSize);
                 return data[(int) (rank - offset)];
             }
             offset += pageSize;
