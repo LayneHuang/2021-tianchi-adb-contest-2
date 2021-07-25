@@ -2,7 +2,6 @@ package com.aliyun.adb.contest.cache;
 
 import com.aliyun.adb.contest.pool.WriteTask;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 

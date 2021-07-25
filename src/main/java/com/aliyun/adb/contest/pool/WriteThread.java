@@ -18,15 +18,16 @@ public class WriteThread extends Thread {
             if (task == null || task.getBuffer() == null) {
                 break;
             }
-            try (FileChannel fileChannel = FileChannel.open(task.getPath(),
+            try (FileChannel fileChannel = FileChannel.open(
+                    task.getPath(),
                     StandardOpenOption.WRITE,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING
             )) {
-//            showBuffer(buffer);
                 ByteBuffer buffer = task.getBuffer();
                 buffer.flip();
                 fileChannel.write(buffer);
+                buffer.clear();
             } catch (IOException e) {
                 e.printStackTrace();
             }

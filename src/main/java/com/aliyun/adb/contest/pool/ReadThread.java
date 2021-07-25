@@ -209,7 +209,6 @@ public class ReadThread extends Thread {
             if (page.byteBuffer == null) return;
             table.pageCounts[page.threadIndex][page.pageIndex][page.columnIndex] += page.dataCount;
             bq.put(new WriteTask(page.byteBuffer, Constant.getPath(page)));
-            page.byteBuffer = null;
         });
     }
 
