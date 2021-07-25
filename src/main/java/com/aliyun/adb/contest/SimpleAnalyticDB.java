@@ -84,7 +84,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
         int tIdx = indexMap.get(table);
         int colIdx = tables.get(tIdx).colIndexMap.get(column);
         long ans = MyPageManager.find(tables.get(tIdx), tIdx, colIdx, percentile);
-        // System.out.println("query: " + table + ", column: " + column + ", percentile:" + percentile + ", ans:" + ans);
+         System.out.println("query: " + table + ", column: " + column + ", percentile:" + percentile + ", ans:" + ans);
         return String.valueOf(ans);
     }
 

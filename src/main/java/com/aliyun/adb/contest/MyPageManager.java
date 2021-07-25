@@ -25,11 +25,11 @@ public final class MyPageManager {
                 for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; threadIdx++) {
                     if (table.pageCounts[threadIdx][pIdx][cIdx] == 0) continue;
                     Path path = Constant.getPath(tIdx, cIdx, threadIdx, pIdx);
-                    ByteBuffer buffer = ByteBuffer.allocate(table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES);
+                    ByteBuffer buffer = ByteBuffer.allocateDirect(table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES);
                     try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
-                        while (channel.read(buffer) > 0) {
+                        while (channel.read(buffer) > 0 && index < pageSize) {
                             buffer.flip();
-                            while (buffer.hasRemaining()) {
+                            while (buffer.hasRemaining() && index < pageSize) {
                                 long d = buffer.getLong();
                                 data[index++] = d;
                             }
@@ -38,8 +38,8 @@ public final class MyPageManager {
                     }
                 }
                 Arrays.parallelSort(data);
-                // showData(data);
-                // System.out.println("idx: " + (rank - offset));
+                showData(data);
+                System.out.println("page size:" + pageSize + ", index size:" + index);
                 return data[(int) (rank - offset)];
             }
             offset += pageSize;
@@ -56,7 +56,12 @@ public final class MyPageManager {
     }
 
     private static void showData(long[] data) {
-        for (long d : data) System.out.print(d + " ");
+        int cnt = 0;
+        for (long d : data) {
+            cnt++;
+            if (cnt > 20) break;
+            System.out.print(d + " ");
+        }
         System.out.println();
     }
 }
