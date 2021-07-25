@@ -1,5 +1,6 @@
 package com.aliyun.adb.contest.page;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -7,6 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MyTable {
 
     public Map<String, Integer> colIndexMap = new HashMap<>(2);
+
+    public Path path;
 
     public int index;
 

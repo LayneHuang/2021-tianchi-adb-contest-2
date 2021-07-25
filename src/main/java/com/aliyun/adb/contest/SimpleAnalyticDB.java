@@ -29,14 +29,6 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     @Override
     public void load(String tpchDataFileDir, String workspaceDir) throws Exception {
-
-        for (int i = 0; i < Constant.THREAD_COUNT; ++i) {
-            rThreads[i] = new ReadThread();
-            wThreads[i] = new WriteThread();
-            rThreads[i].bq = wThreads[i].bq;
-            rThreads[i].tId = i;
-        }
-
         long t = System.currentTimeMillis();
         Constant.WORK_DIR = Paths.get(workspaceDir);
         Path dirPath = Paths.get(tpchDataFileDir);
@@ -53,16 +45,20 @@ public class SimpleAnalyticDB implements AnalyticDB {
             }
             tables[tableIndex] = new MyTable();
             tables[tableIndex].index = tableIndex;
+            tables[tableIndex].path = path;
             indexMap.put(path.getFileName().toString(), tableIndex);
-            for (ReadThread thread : rThreads) {
-                thread.path = path;
-                thread.table = tables[tableIndex];
-            }
-            for (ReadThread thread : rThreads) thread.start();
-            for (WriteThread thread : wThreads) thread.start();
-            for (WriteThread thread : wThreads) thread.join();
             tableIndex++;
         }
+        for (int i = 0; i < Constant.THREAD_COUNT; ++i) {
+            rThreads[i] = new ReadThread();
+            wThreads[i] = new WriteThread();
+            rThreads[i].bq = wThreads[i].bq;
+            rThreads[i].tId = i;
+            rThreads[i].allTables = tables;
+        }
+        for (ReadThread thread : rThreads) thread.start();
+        for (WriteThread thread : wThreads) thread.start();
+        for (WriteThread thread : wThreads) thread.join();
         System.out.println("COST TIME : " + (System.currentTimeMillis() - t));
         calTotalSize(tableIndex);
     }

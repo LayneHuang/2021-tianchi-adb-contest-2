@@ -9,15 +9,14 @@ import sun.misc.Cleaner;
 
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ReadThread extends Thread {
 
-    public MyTable table;
+    public MyTable[] allTables;
 
-    public Path path;
+    public MyTable table;
 
     public MyBlockingQueueCache bq;
 
@@ -32,59 +31,62 @@ public class ReadThread extends Thread {
 
     @Override
     public void run() {
-        try (FileChannel channel = FileChannel.open(path)) {
+        for (MyTable table : allTables) {
+            this.table = table;
+            try (FileChannel channel = FileChannel.open(table.path)) {
 
-            long fileSize = channel.size();
+                long fileSize = channel.size();
 //            System.out.println("fileSize: " + fileSize);
-            // 分成多少块
-            int DEFAULT_BLOCK_COUNT = (int) (fileSize / Constant.MAPPED_SIZE)
-                    + (fileSize % Constant.MAPPED_SIZE == 0 ? 0 : 1);
+                // 分成多少块
+                int DEFAULT_BLOCK_COUNT = (int) (fileSize / Constant.MAPPED_SIZE)
+                        + (fileSize % Constant.MAPPED_SIZE == 0 ? 0 : 1);
 
-            // 每个线程读多少块
-            int BLOCK_PER_THREAD = (DEFAULT_BLOCK_COUNT / Constant.THREAD_COUNT)
-                    + (DEFAULT_BLOCK_COUNT % Constant.THREAD_COUNT == 0 ? 0 : 1);
+                // 每个线程读多少块
+                int BLOCK_PER_THREAD = (DEFAULT_BLOCK_COUNT / Constant.THREAD_COUNT)
+                        + (DEFAULT_BLOCK_COUNT % Constant.THREAD_COUNT == 0 ? 0 : 1);
 
-            int beginBIdx = tId * BLOCK_PER_THREAD;
+                int beginBIdx = tId * BLOCK_PER_THREAD;
 
-            int endBIdx = Math.min(beginBIdx + BLOCK_PER_THREAD, DEFAULT_BLOCK_COUNT);
+                int endBIdx = Math.min(beginBIdx + BLOCK_PER_THREAD, DEFAULT_BLOCK_COUNT);
 
-            if (beginBIdx >= DEFAULT_BLOCK_COUNT) {
-                bq.put(new WriteTask());
-                return;
-            }
-
-            table.initBlocks(DEFAULT_BLOCK_COUNT);
-            System.out.println("DEFAULT_BLOCK_COUNT: " + DEFAULT_BLOCK_COUNT + ", BLOCK_PER_THREAD: " + BLOCK_PER_THREAD + ", beginBIdx: " + beginBIdx + ", endIndex: " + endBIdx);
-
-            blockCountInThread = endBIdx - beginBIdx;
-
-            for (int i = 0; i < blockCountInThread; ++i) {
-
-                int bIdx = beginBIdx + i;
-
-                long begin = Constant.MAPPED_SIZE * bIdx;
-
-                long end = Math.min(begin + Constant.MAPPED_SIZE, fileSize);
-
-                // System.out.println("block " + bIdx + ", begin: " + begin + " ,end: " + end);
-
-                MappedByteBuffer buffer = channel.map(
-                        FileChannel.MapMode.READ_ONLY,
-                        begin,
-                        end - begin
-                );
-                trans(i, table.blocks[bIdx], buffer);
-//                notTrans(buffer);
-                // notTransNotWrite(buffer);
-//                transNumberNotWrite(buffer);
-                Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
-                if (cleaner != null) {
-                    cleaner.clean();
+                if (beginBIdx >= DEFAULT_BLOCK_COUNT) {
+                    bq.put(new WriteTask());
+                    return;
                 }
+
+                table.initBlocks(DEFAULT_BLOCK_COUNT);
+                System.out.println("DEFAULT_BLOCK_COUNT: " + DEFAULT_BLOCK_COUNT + ", BLOCK_PER_THREAD: " + BLOCK_PER_THREAD + ", beginBIdx: " + beginBIdx + ", endIndex: " + endBIdx);
+
+                blockCountInThread = endBIdx - beginBIdx;
+
+                for (int i = 0; i < blockCountInThread; ++i) {
+
+                    int bIdx = beginBIdx + i;
+
+                    long begin = Constant.MAPPED_SIZE * bIdx;
+
+                    long end = Math.min(begin + Constant.MAPPED_SIZE, fileSize);
+
+                    // System.out.println("block " + bIdx + ", begin: " + begin + " ,end: " + end);
+
+                    MappedByteBuffer buffer = channel.map(
+                            FileChannel.MapMode.READ_ONLY,
+                            begin,
+                            end - begin
+                    );
+                    trans(i, table.blocks[bIdx], buffer);
+//                notTrans(buffer);
+                    // notTransNotWrite(buffer);
+//                transNumberNotWrite(buffer);
+                    Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
+                    if (cleaner != null) {
+                        cleaner.clean();
+                    }
+                }
+                finish();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            finish();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
