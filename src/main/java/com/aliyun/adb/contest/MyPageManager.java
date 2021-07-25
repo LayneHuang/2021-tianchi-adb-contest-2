@@ -44,7 +44,7 @@ public final class MyPageManager {
                     }
                 }
                 Arrays.parallelSort(data);
-                showData(data);
+                // showData(data);
                 System.out.println("page size:" + pageSize + ", index size:" + index + ", fileSize:" + fileSize);
                 return data[(int) (rank - offset)];
             }
