@@ -27,9 +27,9 @@ public final class MyPageManager {
                     Path path = Constant.getPath(tIdx, cIdx, threadIdx, pIdx);
                     ByteBuffer buffer = ByteBuffer.allocateDirect(table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES);
                     try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
-                        while (channel.read(buffer) > 0 && index < pageSize) {
+                        while (channel.read(buffer) > 0) {
                             buffer.flip();
-                            while (buffer.hasRemaining() && index < pageSize) {
+                            while (buffer.hasRemaining()) {
                                 long d = buffer.getLong();
                                 data[index++] = d;
                             }
