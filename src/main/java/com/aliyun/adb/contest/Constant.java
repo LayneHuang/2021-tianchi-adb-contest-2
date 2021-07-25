@@ -22,6 +22,8 @@ public final class Constant {
     public static final int WRITE_SIZE = 64 * 1024;
     // MappedByteBuffer 单次读取的大小
     public static final long MAPPED_SIZE = 32 * 1024 * 1024;
+    // 文件页单次写入磁盘的页大小
+    public static final int READ_SIZE = 64 * 1024;
 
     public static int getPageIndex(int value) {
         int distance = Integer.MAX_VALUE / PAGE_COUNT;

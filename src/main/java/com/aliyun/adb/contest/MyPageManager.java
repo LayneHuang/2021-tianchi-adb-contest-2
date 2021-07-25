@@ -25,7 +25,7 @@ public final class MyPageManager {
                 for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; threadIdx++) {
                     if (table.pageCounts[threadIdx][pIdx][cIdx] == 0) continue;
                     Path path = Constant.getPath(tIdx, cIdx, threadIdx, pIdx);
-                    ByteBuffer buffer = ByteBuffer.allocate(table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES);
+                    ByteBuffer buffer = ByteBuffer.allocate(Constant.READ_SIZE);
                     try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
                         while (channel.read(buffer) > 0) {
                             buffer.flip();
