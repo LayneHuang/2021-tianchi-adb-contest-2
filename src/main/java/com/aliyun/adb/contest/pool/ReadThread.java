@@ -201,7 +201,7 @@ public class ReadThread extends Thread {
     /**
      * 剩下的 Page 落盘
      */
-    private synchronized void flushRestPage() {
+    private void flushRestPage() {
         if (table.pageCounts == null) {
             System.out.println("table " + table.index + " pageCount not init");
         }
@@ -209,6 +209,7 @@ public class ReadThread extends Thread {
             if (page.byteBuffer == null) return;
             table.pageCounts[page.threadIndex][page.pageIndex][page.columnIndex] += page.dataCount;
             bq.put(new WriteTask(page.byteBuffer, Constant.getPath(page)));
+            page.byteBuffer = null;
         });
     }
 
