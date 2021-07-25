@@ -19,16 +19,9 @@ public final class Constant {
     // 内存页每次申请的数组长度
     public static final int ARRAY_LENGTH = 1024 * 1024;
     // 文件页单次写入磁盘的页大小
-    public static final long WRITE_SIZE = 64 * 1024;
+    public static final int WRITE_SIZE = 64 * 1024;
     // MappedByteBuffer 单次读取的大小
     public static final long MAPPED_SIZE = 32 * 1024 * 1024;
-
-    public static void main(String[] args) {
-        long halfFile = (long) (WRITE_SIZE * THREAD_COUNT * PAGE_COUNT) + (ARRAY_LENGTH * PAGE_COUNT * THREAD_COUNT * 8L);
-        long allFile = (WRITE_SIZE * THREAD_COUNT * PAGE_COUNT * 2L);
-        System.out.println("内存硬盘各存一半时内存大概占用:" + halfFile / 1024 / 1024.f + " MB");
-        System.out.println("纯硬盘存时内存大概占用:" + allFile / 1024 / 1024.f + " MB");
-    }
 
     public static int getPageIndex(int value) {
         int distance = Integer.MAX_VALUE / PAGE_COUNT;
