@@ -1,9 +1,10 @@
 package com.aliyun.adb.contest;
 
 import com.aliyun.adb.contest.page.MyTable;
+import sun.misc.Cleaner;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -26,20 +27,25 @@ public final class MyPageManager {
                 for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; threadIdx++) {
                     if (table.pageCounts[threadIdx][pIdx][cIdx] == 0) continue;
                     Path path = Constant.getPath(tIdx, cIdx, threadIdx, pIdx);
-                    ByteBuffer buffer = ByteBuffer.allocate(table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES);
                     try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+                        MappedByteBuffer buffer = channel.map(
+                                FileChannel.MapMode.READ_ONLY,
+                                0,
+                                (long) table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES
+                        );
                         fileSize += channel.size() / 8;
-                        while (channel.read(buffer) > 0) {
-                            buffer.flip();
-                            while (buffer.hasRemaining()) {
-                                long d = buffer.getLong();
-                                if (index >= pageSize) {
-                                    System.out.println("FUCK");
-                                    break;
-                                }
-                                data[index++] = d;
+                        while (buffer.hasRemaining()) {
+                            long d = buffer.getLong();
+                            if (index >= pageSize) {
+                                System.out.println("FUCK");
+                                break;
                             }
-                            buffer.clear();
+                            data[index++] = d;
+                        }
+                        buffer.clear();
+                        Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
+                        if (cleaner != null) {
+                            cleaner.clean();
                         }
                     }
                 }
