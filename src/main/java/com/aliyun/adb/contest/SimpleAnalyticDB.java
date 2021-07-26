@@ -49,11 +49,8 @@ public class SimpleAnalyticDB implements AnalyticDB {
             tableIndex++;
         }
         for (int i = 0; i < Constant.THREAD_COUNT; ++i) {
-            rThreads[i] = new ReadThread();
             wThreads[i] = new WriteThread();
-            rThreads[i].bq = wThreads[i].bq;
-            rThreads[i].tId = i;
-            rThreads[i].tables = tables;
+            rThreads[i] = new ReadThread(i, tables, wThreads[i].bq);
         }
         for (ReadThread thread : rThreads) thread.start();
         for (WriteThread thread : wThreads) thread.start();
@@ -79,6 +76,8 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
+        if (debug > 30) return "0";
+        debug++;
         int tIdx = indexMap.get(table);
         int colIdx = tables.get(tIdx).colIndexMap.get(column);
         long ans = MyPageManager.find(tables.get(tIdx), tIdx, colIdx, percentile);

@@ -14,21 +14,26 @@ import java.util.List;
 import java.util.Map;
 
 public class ReadThread extends Thread {
+    /**
+     * 线程序号
+     */
+    private final int tId;
 
-    public List<MyTable> tables;
+    private final List<MyTable> tables;
 
-    public MyTable table;
+    private MyTable table;
 
-    public MyBlockingQueueCache bq;
+    private final MyBlockingQueueCache bq;
 
     private final Map<String, MyValuePage> pages = new HashMap<>();
 
     private int blockCountInThread;
 
-    /**
-     * 线程序号
-     */
-    public int tId;
+    public ReadThread(int tId, List<MyTable> tables, MyBlockingQueueCache bq) {
+        this.tId = tId;
+        this.tables = tables;
+        this.bq = bq;
+    }
 
     @Override
     public void run() {
