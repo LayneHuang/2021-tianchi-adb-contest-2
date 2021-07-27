@@ -50,7 +50,7 @@ public class ReadThread extends Thread {
                 if (pages[key] == null) {
                     pages[key] = new MyValuePage();
                 } else {
-                    pages[key].byteBuffer = null;
+                    pages[key].size = 0;
                     pages[key].dataCount = 0;
                 }
             }
@@ -175,15 +175,15 @@ public class ReadThread extends Thread {
         int pIdx = Constant.getPageIndex(input);
         int key = getKey(cIdx, pIdx);
         pages[key].add(input);
-        if (!pages[key].byteBuffer.hasRemaining()) {
+        if (pages[key].full()) {
             bq.put(new WriteTask(
-                    pages[key].byteBuffer,
+                    pages[key].copy(),
                     Constant.getPath(tId, table.index, cIdx, pIdx),
                     table.index,
                     cIdx,
                     pIdx
             ));
-            pages[key].byteBuffer = null;
+            pages[key].size = 0;
         }
     }
 
@@ -228,10 +228,10 @@ public class ReadThread extends Thread {
         for (int cIdx = 0; cIdx < Constant.MAX_COL_COUNT; ++cIdx) {
             for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
                 int key = getKey(cIdx, pIdx);
-                if (pages[key].byteBuffer == null) continue;
                 table.pageCounts[tId][pIdx][cIdx] += pages[key].dataCount;
+                if (pages[key].size == 0) continue;
                 bq.put(new WriteTask(
-                        pages[key].byteBuffer,
+                        pages[key].copy(),
                         Constant.getPath(tId, table.index, cIdx, pIdx),
                         table.index,
                         cIdx,

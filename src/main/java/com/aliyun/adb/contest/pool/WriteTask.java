@@ -1,6 +1,5 @@
 package com.aliyun.adb.contest.pool;
 
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 public class WriteTask {
@@ -11,23 +10,23 @@ public class WriteTask {
 
     private int pIdx;
 
-    private ByteBuffer buffer;
+    private long[] data;
 
     private Path path;
 
     public WriteTask() {
     }
 
-    public WriteTask(ByteBuffer buffer, Path path, int tableId, int cIdx, int pIdx) {
-        this.buffer = buffer;
+    public WriteTask(long[] data, Path path, int tableId, int cIdx, int pIdx) {
+        this.data = data;
         this.path = path;
         this.tableId = tableId;
         this.cIdx = cIdx;
         this.pIdx = pIdx;
     }
 
-    public ByteBuffer getBuffer() {
-        return buffer;
+    public long[] getData() {
+        return data;
     }
 
     public Path getPath() {

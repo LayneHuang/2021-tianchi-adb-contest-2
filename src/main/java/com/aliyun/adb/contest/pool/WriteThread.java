@@ -1,5 +1,6 @@
 package com.aliyun.adb.contest.pool;
 
+import com.aliyun.adb.contest.Constant;
 import com.aliyun.adb.contest.cache.MyBlockingQueueCache;
 
 import java.io.IOException;
@@ -13,7 +14,9 @@ public class WriteThread extends Thread {
 
     public MyBlockingQueueCache bq = new MyBlockingQueueCache();
 
-    private Set<String> st = new HashSet<>();
+    private final Set<String> st = new HashSet<>();
+
+    private final ByteBuffer buffer = ByteBuffer.allocate(Constant.WRITE_SIZE);
 
     public WriteThread() {
     }
@@ -22,7 +25,7 @@ public class WriteThread extends Thread {
     public void run() {
         while (true) {
             WriteTask task = bq.poll();
-            if (task == null || task.getBuffer() == null) {
+            if (task == null || task.getPath() == null) {
                 break;
             }
             try (FileChannel fileChannel = FileChannel.open(
@@ -32,7 +35,7 @@ public class WriteThread extends Thread {
                     st.contains(task.getPath().toString()) ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING
             )) {
                 st.add(task.getPath().toString());
-                ByteBuffer buffer = task.getBuffer();
+                trans(task.getData());
                 buffer.flip();
                 fileChannel.write(buffer);
                 buffer.clear();
@@ -40,5 +43,10 @@ public class WriteThread extends Thread {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void trans(long[] data) {
+        buffer.clear();
+        for (long d : data) buffer.putLong(d);
     }
 }
