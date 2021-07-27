@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MyTable {
 
-    public Map<String, Integer> colIndexMap = new HashMap<>(2);
+    public Map<String, Integer> colIndexMap = new HashMap<>(Constant.MAX_COL_COUNT);
 
     public Path path;
 
@@ -19,7 +19,7 @@ public class MyTable {
 
     public MyBlock[] blocks;
 
-    public int[][][] pageCounts = new int[Constant.THREAD_COUNT][Constant.PAGE_COUNT][2];
+    public int[][][] pageCounts = new int[Constant.THREAD_COUNT][Constant.PAGE_COUNT][Constant.MAX_COL_COUNT];
 
     public int dataCount;
 

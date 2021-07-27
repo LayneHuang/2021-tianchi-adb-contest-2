@@ -1,5 +1,7 @@
 package com.aliyun.adb.contest.page;
 
+import com.aliyun.adb.contest.Constant;
+
 public class MyBlock {
 
     public int lastColIndex;
@@ -10,6 +12,6 @@ public class MyBlock {
 
     public int beginLen;
 
-    public long[] begins = new long[5];
+    public long[] begins = new long[Constant.MAX_COL_COUNT];
 
 }

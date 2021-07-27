@@ -1,7 +1,5 @@
 package com.aliyun.adb.contest;
 
-import com.aliyun.adb.contest.page.MyValuePage;
-
 import java.nio.file.Path;
 
 /**
@@ -16,14 +14,12 @@ public final class Constant {
     public static final int THREAD_COUNT = 10;
     // 每个线程的页数
     public static final int PAGE_COUNT = 1000;
-    // 内存页每次申请的数组长度
-    public static final int ARRAY_LENGTH = 1024 * 1024;
     // 文件页单次写入磁盘的页大小
     public static final int WRITE_SIZE = 64 * 1024;
     // MappedByteBuffer 单次读取的大小
-    public static final long MAPPED_SIZE = 128 * 1024 * 1024;
-    // 文件页单次写入磁盘的页大小
-    public static final int READ_SIZE = 64 * 1024;
+    public static final long MAPPED_SIZE = 32 * 1024 * 1024;
+    // 列数目
+    public static final int MAX_COL_COUNT = 2;
 
     public static int getPageIndex(int value) {
         int distance = Integer.MAX_VALUE / PAGE_COUNT;
@@ -42,21 +38,13 @@ public final class Constant {
         return (int) Math.min(PAGE_COUNT - 1, (value / distance));
     }
 
-    public static Path getPath(MyValuePage page) {
+    public static Path getPath(int threadIdx, int tableIdx, int cIdx, int pIdx) {
         return Constant.WORK_DIR.resolve(
-                "t" + page.tableIndex +
-                        "_c" + page.columnIndex +
-                        "_t" + page.threadIndex +
-                        "_p" + page.pageIndex
+                getPathStr(threadIdx, tableIdx, cIdx, pIdx)
         );
     }
 
-    public static Path getPath(int tableIdx, int cIdx, int threadIdx, int pIdx) {
-        return Constant.WORK_DIR.resolve(
-                "t" + tableIdx +
-                        "_c" + cIdx +
-                        "_t" + threadIdx +
-                        "_p" + pIdx
-        );
+    public static String getPathStr(int threadIdx, int tableIdx, int cIdx, int pIdx) {
+        return "t" + tableIdx + "_c" + cIdx + "_t" + threadIdx + "_p" + pIdx;
     }
 }

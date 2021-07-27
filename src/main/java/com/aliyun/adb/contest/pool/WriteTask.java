@@ -5,6 +5,8 @@ import java.nio.file.Path;
 
 public class WriteTask {
 
+    private int tableId;
+
     private int cIdx;
 
     private int pIdx;
@@ -16,9 +18,10 @@ public class WriteTask {
     public WriteTask() {
     }
 
-    public WriteTask(ByteBuffer buffer, Path path, int cIdx, int pIdx) {
+    public WriteTask(ByteBuffer buffer, Path path, int tableId, int cIdx, int pIdx) {
         this.buffer = buffer;
         this.path = path;
+        this.tableId = tableId;
         this.cIdx = cIdx;
         this.pIdx = pIdx;
     }
@@ -29,6 +32,10 @@ public class WriteTask {
 
     public Path getPath() {
         return path;
+    }
+
+    public int getTableId() {
+        return tableId;
     }
 
     public int getCIdx() {

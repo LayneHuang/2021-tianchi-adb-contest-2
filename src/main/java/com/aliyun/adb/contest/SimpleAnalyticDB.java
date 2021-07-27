@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SimpleAnalyticDB implements AnalyticDB {
-    private List<MyTable> tables = new ArrayList<>();
+    private final List<MyTable> tables = new ArrayList<>();
     private final Map<String, Integer> indexMap = new HashMap<>();
     private static final ReadThread[] rThreads = new ReadThread[Constant.THREAD_COUNT];
     private static final WriteThread[] wThreads = new WriteThread[Constant.THREAD_COUNT];
@@ -72,12 +72,8 @@ public class SimpleAnalyticDB implements AnalyticDB {
         }
     }
 
-    private int debug = 1;
-
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
-        if (debug > 30) return "0";
-        debug++;
         int tIdx = indexMap.get(table);
         int colIdx = tables.get(tIdx).colIndexMap.get(column);
         long ans = MyPageManager.find(tables.get(tIdx), tIdx, colIdx, percentile);

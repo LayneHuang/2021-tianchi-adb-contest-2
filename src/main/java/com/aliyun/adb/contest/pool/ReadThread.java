@@ -9,9 +9,7 @@ import sun.misc.Cleaner;
 
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ReadThread extends Thread {
     /**
@@ -25,7 +23,7 @@ public class ReadThread extends Thread {
 
     private final MyBlockingQueueCache bq;
 
-    private final Map<String, MyValuePage> pages = new HashMap<>();
+    private final MyValuePage[] pages = new MyValuePage[Constant.MAX_COL_COUNT * Constant.PAGE_COUNT];
 
     private int blockCountInThread;
 
@@ -39,10 +37,24 @@ public class ReadThread extends Thread {
     public void run() {
         for (MyTable tmpTable : tables) {
             table = tmpTable;
-            pages.clear();
+            initPages();
             readTable();
         }
         bq.put(new WriteTask());
+    }
+
+    private void initPages() {
+        for (int cIdx = 0; cIdx < Constant.MAX_COL_COUNT; ++cIdx) {
+            for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
+                int key = getKey(cIdx, pIdx);
+                if (pages[key] == null) {
+                    pages[key] = new MyValuePage();
+                } else {
+                    pages[key].byteBuffer = null;
+                    pages[key].dataCount = 0;
+                }
+            }
+        }
     }
 
     private void readTable() {
@@ -99,8 +111,6 @@ public class ReadThread extends Thread {
                     for (int i = 0; i < names.length; ++i) {
                         table.colIndexMap.put(names[i], i);
                     }
-                    // System.out.println("table " + table.index + " init");
-                    // table.pageCounts = new int[Constant.THREAD_COUNT][Constant.PAGE_COUNT][names.length];
                     break;
                 } else {
                     if (b == 13) continue;
@@ -126,7 +136,8 @@ public class ReadThread extends Thread {
             }
         }
         while (buffer.hasRemaining()) {
-            handleByte(buffer.get());
+            b = buffer.get();
+            handleByte(b);
         }
         setCurToBlock(block);
     }
@@ -150,9 +161,8 @@ public class ReadThread extends Thread {
             System.out.println("HAS DOUBLE!!!");
             maxDataLen = 0;
         } else {
-
             if (maxDataLen > 0) {
-                putData(getPage(nowColIndex));
+                putData(nowColIndex);
             }
             maxDataLen = 0;
             nowColIndex = (b == 44) ? (nowColIndex + 1) : 0;
@@ -160,17 +170,20 @@ public class ReadThread extends Thread {
         }
     }
 
-    private void putData(MyValuePage page) {
+    private void putData(int cIdx) {
         if (input == 0) return;
-        page.add(input);
-        if (!page.byteBuffer.hasRemaining()) {
+        int pIdx = Constant.getPageIndex(input);
+        int key = getKey(cIdx, pIdx);
+        pages[key].add(input);
+        if (!pages[key].byteBuffer.hasRemaining()) {
             bq.put(new WriteTask(
-                    page.byteBuffer,
-                    Constant.getPath(page),
-                    page.columnIndex,
-                    page.pageIndex
+                    pages[key].byteBuffer,
+                    Constant.getPath(tId, table.index, cIdx, pIdx),
+                    table.index,
+                    cIdx,
+                    pIdx
             ));
-            page.byteBuffer = null;
+            pages[key].byteBuffer = null;
         }
     }
 
@@ -200,10 +213,10 @@ public class ReadThread extends Thread {
             MyBlock block = table.blocks[i];
             MyBlock nxtBlock = table.blocks[i + 1];
             input = block.lastInput * (long) Math.pow(10, nxtBlock.firstNumLen) + nxtBlock.begins[0];
-            putData(getPage(block.lastColIndex));
+            putData(block.lastColIndex);
             for (int j = 1; j < nxtBlock.beginLen; ++j) {
                 input = nxtBlock.begins[j];
-                putData(getPage(block.lastColIndex + j));
+                putData(block.lastColIndex + j);
             }
         }
     }
@@ -212,39 +225,23 @@ public class ReadThread extends Thread {
      * 剩下的 Page 落盘
      */
     private void flushRestPage() {
-        if (table.pageCounts == null) {
-            System.out.println("table " + table.index + " pageCount not init");
+        for (int cIdx = 0; cIdx < Constant.MAX_COL_COUNT; ++cIdx) {
+            for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
+                int key = getKey(cIdx, pIdx);
+                if (pages[key].byteBuffer == null) continue;
+                table.pageCounts[tId][pIdx][cIdx] += pages[key].dataCount;
+                bq.put(new WriteTask(
+                        pages[key].byteBuffer,
+                        Constant.getPath(tId, table.index, cIdx, pIdx),
+                        table.index,
+                        cIdx,
+                        pIdx
+                ));
+            }
         }
-        pages.forEach((key, page) -> {
-            if (page.byteBuffer == null) return;
-            table.pageCounts[page.threadIndex][page.pageIndex][page.columnIndex] += page.dataCount;
-            bq.put(new WriteTask(
-                    page.byteBuffer,
-                    Constant.getPath(page),
-                    page.columnIndex,
-                    page.pageIndex
-            ));
-            page.byteBuffer = null;
-        });
     }
 
-    private MyValuePage getPage(int colIndex) {
-        int pageIndex = Constant.getPageIndex(input);
-        String key = getKey(colIndex, pageIndex);
-        if (!pages.containsKey(key)) {
-            MyValuePage page = new MyValuePage();
-            page.tableIndex = table.index;
-            page.threadIndex = tId;
-            page.columnIndex = colIndex;
-            page.pageIndex = pageIndex;
-            page.dataCount = 0;
-            pages.put(key, page);
-            return page;
-        }
-        return pages.get(key);
-    }
-
-    private String getKey(int colIndex, int pageIndex) {
-        return colIndex + ":" + pageIndex;
+    private int getKey(int colIndex, int pageIndex) {
+        return colIndex * Constant.PAGE_COUNT + pageIndex;
     }
 }

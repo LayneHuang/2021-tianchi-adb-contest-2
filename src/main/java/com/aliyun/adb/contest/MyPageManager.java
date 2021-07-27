@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 public final class MyPageManager {
 
-    public static long find(MyTable table, int tIdx, int cIdx, double percentile) throws IOException {
+    public static long find(MyTable table, int tableIdx, int cIdx, double percentile) throws IOException {
         long rank = Math.round(table.dataCount * percentile) - 1;
         if (rank < 0) rank = 0;
         // System.out.println("percentile: " + percentile + ", rank: " + rank);
@@ -23,41 +23,43 @@ public final class MyPageManager {
                 // System.out.println("Found in Page: " + pIdx + ", PageSize: " + pageSize);
                 long[] data = new long[pageSize];
                 int index = 0;
-                long fileSize = 0;
                 for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; threadIdx++) {
                     if (table.pageCounts[threadIdx][pIdx][cIdx] == 0) continue;
-                    Path path = Constant.getPath(tIdx, cIdx, threadIdx, pIdx);
-                    try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
-                        MappedByteBuffer buffer = channel.map(
-                                FileChannel.MapMode.READ_ONLY,
-                                0,
-                                (long) table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES
-                        );
-                        fileSize += channel.size() / 8;
-                        while (buffer.hasRemaining()) {
-                            long d = buffer.getLong();
-                            if (index >= pageSize) {
-                                System.out.println("FUCK");
-                                break;
-                            }
-                            data[index++] = d;
-                        }
-                        buffer.clear();
-                        Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
-                        if (cleaner != null) {
-                            cleaner.clean();
-                        }
-                    }
+                    index = readFromFile(table, data, threadIdx, tableIdx, cIdx, pIdx, index);
                 }
                 Arrays.parallelSort(data);
                 // showData(data);
-                System.out.println("page size:" + pageSize + ", index size:" + index + ", fileSize:" + fileSize);
+                System.out.println("page size:" + pageSize + ", index size:" + index);
                 return data[(int) (rank - offset)];
             }
             offset += pageSize;
         }
         return -1;
     }
+
+    private static int readFromFile(MyTable table, long[] data, int threadIdx, int tIdx, int cIdx, int pIdx, int beginIndex)
+            throws IOException {
+        int index = beginIndex;
+        Path path = Constant.getPath(threadIdx, tIdx, cIdx, pIdx);
+        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+            MappedByteBuffer buffer = channel.map(
+                    FileChannel.MapMode.READ_ONLY,
+                    0,
+                    (long) table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES
+            );
+            while (buffer.hasRemaining()) {
+                long d = buffer.getLong();
+                data[index++] = d;
+            }
+            buffer.clear();
+            Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
+            if (cleaner != null) {
+                cleaner.clean();
+            }
+        }
+        return index;
+    }
+
 
     private static int getPageSize(MyTable table, int cIdx, int pIdx) {
         int pageSize = 0;

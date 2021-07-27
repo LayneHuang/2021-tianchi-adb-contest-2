@@ -15,6 +15,9 @@ public class WriteThread extends Thread {
 
     private Set<String> st = new HashSet<>();
 
+    public WriteThread() {
+    }
+
     @Override
     public void run() {
         while (true) {
