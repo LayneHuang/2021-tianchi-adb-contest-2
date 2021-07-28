@@ -22,7 +22,6 @@ public class SimpleAnalyticDB implements AnalyticDB {
     private static final ReadThread[] rThreads = new ReadThread[Constant.THREAD_COUNT];
     private static final WriteThread[] wThreads = new WriteThread[Constant.THREAD_COUNT];
     private TableInfoPersistence tableInfoDB = new TableInfoPersistence();
-    private boolean loaded = false;
 
     /**
      * The implementation must contain a public no-argument constructor.
@@ -36,9 +35,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
         Constant.WORK_DIR = Paths.get(workspaceDir);
         if (tableInfoDB.readLoaded()) {
             tableInfoDB.loadTableInfo(tables, indexMap);
-            loaded = true;
             System.out.println("SECOND LOAD, COST:" + (System.currentTimeMillis() - t));
-            // calTotalSize();
             return;
         }
         Path dirPath = Paths.get(tpchDataFileDir);
@@ -92,13 +89,12 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
-//        if (debug > 0 && loaded) return "0";
-//        debug++;
+        debug++;
+        if (debug > 30) return "0";
         int tIdx = indexMap.get(table);
         int colIdx = tables.get(tIdx).colIndexMap.get(column);
         long ans = MyPageManager.find(tables.get(tIdx), tIdx, colIdx, percentile);
-        System.out.println("query: " + table + ", column: " + column + ", percentile:" + percentile
-                + ",tIdx: " + tIdx + ", cIdx: " + colIdx + ", ans:" + ans);
+        System.out.println("query: " + table + ", column: " + column + ", percentile:" + percentile + ", ans:" + ans);
         return String.valueOf(ans);
     }
 

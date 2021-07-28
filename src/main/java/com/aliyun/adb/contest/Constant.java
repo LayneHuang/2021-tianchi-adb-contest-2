@@ -4,8 +4,6 @@ import java.nio.file.Path;
 
 public final class Constant {
     public static Path WORK_DIR;
-    // 进程号
-    public static final int PROCESS_ID = 1;
     // 线程数
     public static final int THREAD_COUNT = 10;
     // 每个线程的页数
@@ -37,7 +35,7 @@ public final class Constant {
     }
 
     public static Path getGlobalPath() {
-        return Constant.WORK_DIR.resolve("a_table_info_" + PROCESS_ID);
+        return Constant.WORK_DIR.resolve("a_table_info");
     }
 
     public static Path getPath(int threadIdx, int tableIdx, int cIdx, int pIdx) {

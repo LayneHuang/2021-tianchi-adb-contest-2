@@ -6,7 +6,6 @@ import com.aliyun.adb.contest.page.MyTable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
@@ -16,10 +15,8 @@ import java.util.Map;
  */
 public class TableInfoPersistence {
 
-
     public boolean readLoaded() {
-        Path path = Constant.getGlobalPath();
-        return path.toFile().exists();
+        return Constant.getGlobalPath().toFile().exists();
     }
 
     public void saveTableInfo(List<MyTable> tables) {
@@ -73,7 +70,6 @@ public class TableInfoPersistence {
     }
 
     public void loadTableInfo(List<MyTable> tables, Map<String, Integer> indexMap) {
-        System.out.println("---------------------- second load -------------------------");
         ByteBuffer buffer = ByteBuffer.allocate((int) Constant.MAPPED_SIZE);
         try (FileChannel fileChannel = FileChannel.open(
                 Constant.getGlobalPath(),
@@ -81,10 +77,9 @@ public class TableInfoPersistence {
             // 读第一次
             fileChannel.read(buffer);
             buffer.flip();
-
             // 表个数
             int tableSize = buffer.getInt();
-            System.out.println("tableSize:" + tableSize);
+//            System.out.println("tableSize:" + tableSize);
             for (int i = 0; i < tableSize; ++i) {
                 MyTable table = new MyTable();
                 tables.add(table);
@@ -94,14 +89,14 @@ public class TableInfoPersistence {
                 StringBuilder tempName = new StringBuilder();
                 for (int j = 0; j < nameLen; ++j) tempName.append(buffer.getChar());
                 table.name = tempName.toString();
-                System.out.println("name:" + table.name);
+//                System.out.println("name:" + table.name);
                 indexMap.put(table.name, table.index);
                 // 表行数量
                 table.dataCount = buffer.getInt();
-                System.out.println("dataCount:" + table.dataCount);
+//                System.out.println("dataCount:" + table.dataCount);
                 int colSize = buffer.getInt();
                 // 列名
-                System.out.println("col size:" + colSize);
+//                System.out.println("col size:" + colSize);
                 for (int j = 0; j < colSize; ++j) {
                     int colIdx = buffer.getInt();
                     int colNameLen = buffer.getInt();
@@ -127,7 +122,6 @@ public class TableInfoPersistence {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("---------------------- load end --------------------------");
     }
 
 }
