@@ -104,7 +104,7 @@ public class TableInfoPersistence {
                     for (int k = 0; k < colNameLen; ++k) tempName.append(buffer.getChar());
                     String colName = tempName.toString();
                     table.colIndexMap.put(colName, colIdx);
-                    System.out.println("colIdx:" + colIdx + ",colName:" + colName);
+                    // System.out.println("colIdx:" + colIdx + ",colName:" + colName);
                 }
                 // page 个数
                 for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; ++threadIdx) {
