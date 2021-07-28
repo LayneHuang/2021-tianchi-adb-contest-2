@@ -35,8 +35,10 @@ public class ReadThread extends Thread {
 
     @Override
     public void run() {
-        for (MyTable tmpTable : tables) {
-            table = tmpTable;
+        // 多表错位读, 减少同表的并发
+        int tableSize = tables.size();
+        for (int i = 0; i < tableSize; ++i) {
+            table = tables.get((tId + i) % tableSize);
             initPages();
             readTable();
         }
