@@ -47,27 +47,29 @@ public class TableInfoPersistence {
                     buffer.putInt(key.length());
                     for (int i = 0; i < key.length(); ++i) buffer.putChar(key.charAt(i));
                 });
-                buffer.flip();
-                fileChannel.write(buffer);
-                buffer.clear();
-
+                flush(fileChannel, buffer);
                 // page 个数
                 for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; ++threadIdx) {
                     for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
                         for (int cIdx = 0; cIdx < colSize; ++cIdx) {
                             buffer.putInt(table.pageCounts[threadIdx][pIdx][cIdx]);
                             if (!buffer.hasRemaining()) {
-                                buffer.flip();
-                                fileChannel.write(buffer);
-                                buffer.clear();
+                                flush(fileChannel, buffer);
                             }
                         }
                     }
                 }
+                flush(fileChannel, buffer);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void flush(FileChannel channel, ByteBuffer buffer) throws IOException {
+        buffer.flip();
+        channel.write(buffer);
+        buffer.clear();
     }
 
     public void loadTableInfo(List<MyTable> tables, Map<String, Integer> indexMap) {

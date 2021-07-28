@@ -38,6 +38,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
             tableInfoDB.loadTableInfo(tables, indexMap);
             loaded = true;
             System.out.println("SECOND LOAD, COST:" + (System.currentTimeMillis() - t));
+            // calTotalSize();
             return;
         }
         Path dirPath = Paths.get(tpchDataFileDir);
@@ -91,8 +92,8 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
-        if (debug > 0 && loaded) return "0";
-        debug++;
+//        if (debug > 0 && loaded) return "0";
+//        debug++;
         int tIdx = indexMap.get(table);
         int colIdx = tables.get(tIdx).colIndexMap.get(column);
         long ans = MyPageManager.find(tables.get(tIdx), tIdx, colIdx, percentile);
