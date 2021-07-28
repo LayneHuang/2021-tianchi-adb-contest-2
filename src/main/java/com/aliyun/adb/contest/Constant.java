@@ -5,7 +5,7 @@ import java.nio.file.Path;
 public final class Constant {
     public static Path WORK_DIR;
     // 进程号
-    public static final int PROCESS_ID = 2;
+    public static final int PROCESS_ID = 3;
     // 线程数
     public static final int THREAD_COUNT = 10;
     // 每个线程的页数

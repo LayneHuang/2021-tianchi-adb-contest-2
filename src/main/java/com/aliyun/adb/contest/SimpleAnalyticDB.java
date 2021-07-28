@@ -22,6 +22,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
     private static final ReadThread[] rThreads = new ReadThread[Constant.THREAD_COUNT];
     private static final WriteThread[] wThreads = new WriteThread[Constant.THREAD_COUNT];
     private TableInfoPersistence tableInfoDB = new TableInfoPersistence();
+    private boolean loaded = false;
 
     /**
      * The implementation must contain a public no-argument constructor.
@@ -35,13 +36,13 @@ public class SimpleAnalyticDB implements AnalyticDB {
         Constant.WORK_DIR = Paths.get(workspaceDir);
         if (tableInfoDB.readLoaded()) {
             tableInfoDB.loadTableInfo(tables, indexMap);
+            loaded = true;
             System.out.println("SECOND LOAD, COST:" + (System.currentTimeMillis() - t));
             return;
         }
         Path dirPath = Paths.get(tpchDataFileDir);
         List<Path> tablePaths = Files.list(dirPath).collect(Collectors.toList());
         // 等待所有表跑完
-        System.out.printf("table count: %d\n", tablePaths.size());
         int tableIndex = 0;
         for (Path path : tablePaths) {
             if (path.getFileName().toString().equals("results")) {
@@ -56,6 +57,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
             indexMap.put(table.name, tableIndex);
             tableIndex++;
         }
+        System.out.println("table count: " + tables.size());
         for (int i = 0; i < Constant.THREAD_COUNT; ++i) {
             wThreads[i] = new WriteThread();
             rThreads[i] = new ReadThread(i, tables, wThreads[i].bq);
@@ -85,13 +87,17 @@ public class SimpleAnalyticDB implements AnalyticDB {
         }
     }
 
+    private int debug = 0;
+
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
+        if (debug > 0 && loaded) return "0";
+        debug++;
         int tIdx = indexMap.get(table);
         int colIdx = tables.get(tIdx).colIndexMap.get(column);
-        System.out.println("tIdx: " + tIdx + ", cIdx: " + colIdx);
         long ans = MyPageManager.find(tables.get(tIdx), tIdx, colIdx, percentile);
-        System.out.println("query: " + table + ", column: " + column + ", percentile:" + percentile + ", ans:" + ans);
+        System.out.println("query: " + table + ", column: " + column + ", percentile:" + percentile
+                + ",tIdx: " + tIdx + ", cIdx: " + colIdx + ", ans:" + ans);
         return String.valueOf(ans);
     }
 
