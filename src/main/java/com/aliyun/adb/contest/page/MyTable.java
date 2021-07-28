@@ -11,6 +11,8 @@ public class MyTable {
 
     public Map<String, Integer> colIndexMap = new HashMap<>(Constant.MAX_COL_COUNT);
 
+    public String name;
+
     public Path path;
 
     public int index;

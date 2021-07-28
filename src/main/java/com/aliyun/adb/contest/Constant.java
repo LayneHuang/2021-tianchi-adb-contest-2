@@ -2,14 +2,10 @@ package com.aliyun.adb.contest;
 
 import java.nio.file.Path;
 
-/**
- * @Classname Constant
- * @Description
- * @Date 2021/5/25 21:08
- * @Created by FinkyS
- */
 public final class Constant {
     public static Path WORK_DIR;
+    // 进程号
+    public static final int PROCESS_ID = 2;
     // 线程数
     public static final int THREAD_COUNT = 10;
     // 每个线程的页数
@@ -38,6 +34,10 @@ public final class Constant {
     public static int getPageIndex(double value) {
         double distance = Double.MAX_VALUE / PAGE_COUNT;
         return (int) Math.min(PAGE_COUNT - 1, (value / distance));
+    }
+
+    public static Path getGlobalPath() {
+        return Constant.WORK_DIR.resolve("a_table_info_" + PROCESS_ID);
     }
 
     public static Path getPath(int threadIdx, int tableIdx, int cIdx, int pIdx) {

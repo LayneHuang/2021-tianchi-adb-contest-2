@@ -1,6 +1,7 @@
 package com.aliyun.adb.contest;
 
 import com.aliyun.adb.contest.page.MyTable;
+import com.aliyun.adb.contest.persistence.TableInfoPersistence;
 import com.aliyun.adb.contest.pool.ReadThread;
 import com.aliyun.adb.contest.pool.WriteThread;
 import com.aliyun.adb.contest.spi.AnalyticDB;
@@ -20,6 +21,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
     private final Map<String, Integer> indexMap = new HashMap<>();
     private static final ReadThread[] rThreads = new ReadThread[Constant.THREAD_COUNT];
     private static final WriteThread[] wThreads = new WriteThread[Constant.THREAD_COUNT];
+    private TableInfoPersistence tableInfoDB = new TableInfoPersistence();
 
     /**
      * The implementation must contain a public no-argument constructor.
@@ -31,6 +33,11 @@ public class SimpleAnalyticDB implements AnalyticDB {
     public void load(String tpchDataFileDir, String workspaceDir) throws Exception {
         long t = System.currentTimeMillis();
         Constant.WORK_DIR = Paths.get(workspaceDir);
+        if (tableInfoDB.readLoaded()) {
+            tableInfoDB.loadTableInfo(tables, indexMap);
+            System.out.println("SECOND LOAD, COST:" + (System.currentTimeMillis() - t));
+            return;
+        }
         Path dirPath = Paths.get(tpchDataFileDir);
         List<Path> tablePaths = Files.list(dirPath).collect(Collectors.toList());
         // 等待所有表跑完
@@ -44,8 +51,9 @@ public class SimpleAnalyticDB implements AnalyticDB {
             MyTable table = new MyTable();
             table.index = tableIndex;
             table.path = path;
+            table.name = path.getFileName().toString();
             tables.add(table);
-            indexMap.put(path.getFileName().toString(), tableIndex);
+            indexMap.put(table.name, tableIndex);
             tableIndex++;
         }
         for (int i = 0; i < Constant.THREAD_COUNT; ++i) {
@@ -55,8 +63,13 @@ public class SimpleAnalyticDB implements AnalyticDB {
         for (ReadThread thread : rThreads) thread.start();
         for (WriteThread thread : wThreads) thread.start();
         for (WriteThread thread : wThreads) thread.join();
-        System.out.println("COST TIME : " + (System.currentTimeMillis() - t));
+        long readWriteT = System.currentTimeMillis();
+        System.out.println("READ AND WRITE COST TIME : " + (readWriteT - t));
         calTotalSize();
+        long calPageT = System.currentTimeMillis();
+        System.out.println("CAL PAGE COST TIME : " + (calPageT - readWriteT));
+        tableInfoDB.saveTableInfo(tables);
+        System.out.println("SAVE INFO COST TIME : " + (System.currentTimeMillis() - calPageT));
     }
 
     private void calTotalSize() {
@@ -76,6 +89,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
     public String quantile(String table, String column, double percentile) throws IOException {
         int tIdx = indexMap.get(table);
         int colIdx = tables.get(tIdx).colIndexMap.get(column);
+        System.out.println("tIdx: " + tIdx + ", cIdx: " + colIdx);
         long ans = MyPageManager.find(tables.get(tIdx), tIdx, colIdx, percentile);
         System.out.println("query: " + table + ", column: " + column + ", percentile:" + percentile + ", ans:" + ans);
         return String.valueOf(ans);
