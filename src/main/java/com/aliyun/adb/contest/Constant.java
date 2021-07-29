@@ -21,7 +21,7 @@ public final class Constant {
     public static final int DATA_COUNT = 1000_000_000;
 
     // CacheSize
-    public static final int CACHE_SIZE = (int) (6L * 1024 * 1024 * 1024 / (DATA_COUNT / PAGE_COUNT * Long.BYTES));
+    public static final int CACHE_SIZE = (int) ((long) (6.5 * 1024L * 1024 * 1024) / (DATA_COUNT / PAGE_COUNT * Long.BYTES));
 
     public static int getPageIndex(int value) {
         int distance = Integer.MAX_VALUE / PAGE_COUNT;
