@@ -179,10 +179,7 @@ public class ReadThread extends Thread {
         if (pages[key].full()) {
             bq.put(new WriteTask(
                     pages[key].copy(),
-                    Constant.getPath(tId, table.index, cIdx, pIdx),
-                    table.index,
-                    cIdx,
-                    pIdx
+                    Constant.getPath(tId, table.index, cIdx, pIdx)
             ));
             pages[key].size = 0;
         }
@@ -233,10 +230,7 @@ public class ReadThread extends Thread {
                 if (pages[key].size == 0) continue;
                 bq.put(new WriteTask(
                         pages[key].copy(),
-                        Constant.getPath(tId, table.index, cIdx, pIdx),
-                        table.index,
-                        cIdx,
-                        pIdx
+                        Constant.getPath(tId, table.index, cIdx, pIdx)
                 ));
             }
         }
