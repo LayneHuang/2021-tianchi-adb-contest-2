@@ -43,7 +43,7 @@ public class WriteThread extends Thread {
                 e.printStackTrace();
             }
         }
-        System.out.println("WRITE THREAD Finished, bq max size: " + bq.maxSize);
+        System.out.println("WRITE THREAD Finished, bq max size: " + bq.maxCount);
     }
 
     private void trans(long[] data) {
