@@ -1,7 +1,6 @@
 package com.aliyun.adb.contest.pool;
 
 import com.aliyun.adb.contest.Constant;
-import com.aliyun.adb.contest.cache.MyBlockingQueueCache;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -12,7 +11,7 @@ import java.util.Set;
 
 public class WriteThread extends Thread {
 
-    public MyBlockingQueueCache bq = new MyBlockingQueueCache();
+    public MyBlockingQueue bq = new MyBlockingQueue();
 
     private final Set<String> st = new HashSet<>();
 

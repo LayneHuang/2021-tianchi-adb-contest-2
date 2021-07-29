@@ -1,17 +1,9 @@
-package com.aliyun.adb.contest.cache;
-
-import com.aliyun.adb.contest.pool.WriteTask;
+package com.aliyun.adb.contest.pool;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-/**
- * @Classname MyBufferCache
- * @Description
- * @Date 2021/6/3 16:38
- * @Created by FinkyS
- */
-public final class MyBlockingQueueCache {
+public final class MyBlockingQueue {
 
     private final BlockingQueue<WriteTask> bq = new LinkedBlockingDeque<>(2);
     private int inCont;

@@ -17,6 +17,12 @@ public final class Constant {
     // 列数目
     public static final int MAX_COL_COUNT = 2;
 
+    // 数据数量
+    public static final int DATA_COUNT = 1000_000_000;
+
+    // CacheSize
+    public static final int CACHE_SIZE = (int) (4L * 1024 * 1024 * 1024 / (DATA_COUNT / PAGE_COUNT * Long.BYTES));
+
     public static int getPageIndex(int value) {
         int distance = Integer.MAX_VALUE / PAGE_COUNT;
         return Math.min(PAGE_COUNT - 1, value / distance);

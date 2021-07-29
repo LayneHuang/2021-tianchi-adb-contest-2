@@ -1,7 +1,6 @@
 package com.aliyun.adb.contest.pool;
 
 import com.aliyun.adb.contest.Constant;
-import com.aliyun.adb.contest.cache.MyBlockingQueueCache;
 import com.aliyun.adb.contest.page.MyBlock;
 import com.aliyun.adb.contest.page.MyTable;
 import com.aliyun.adb.contest.page.MyValuePage;
@@ -21,13 +20,13 @@ public class ReadThread extends Thread {
 
     private MyTable table;
 
-    private final MyBlockingQueueCache bq;
+    private final MyBlockingQueue bq;
 
     private final MyValuePage[] pages = new MyValuePage[Constant.MAX_COL_COUNT * Constant.PAGE_COUNT];
 
     private int blockCountInThread;
 
-    public ReadThread(int tId, List<MyTable> tables, MyBlockingQueueCache bq) {
+    public ReadThread(int tId, List<MyTable> tables, MyBlockingQueue bq) {
         this.tId = tId;
         this.tables = tables;
         this.bq = bq;

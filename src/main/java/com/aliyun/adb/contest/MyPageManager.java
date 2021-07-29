@@ -1,5 +1,6 @@
 package com.aliyun.adb.contest;
 
+import com.aliyun.adb.contest.cache.DataCache;
 import com.aliyun.adb.contest.page.MyTable;
 import sun.misc.Cleaner;
 
@@ -12,6 +13,8 @@ import java.util.Arrays;
 
 public final class MyPageManager {
 
+    private static final DataCache cache = new DataCache();
+
     public static long find(MyTable table, int tableIdx, int cIdx, double percentile) throws IOException {
         long rank = Math.round(table.dataCount * percentile) - 1;
         if (rank < 0) rank = 0;
@@ -21,15 +24,11 @@ public final class MyPageManager {
             int pageSize = getPageSize(table, cIdx, pIdx);
             if (rank <= offset + pageSize) {
                 // System.out.println("Found in Page: " + pIdx + ", PageSize: " + pageSize);
-                long[] data = new long[pageSize];
-                int index = 0;
-                for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; threadIdx++) {
-                    if (table.pageCounts[threadIdx][pIdx][cIdx] == 0) continue;
-                    index = readFromFile(table, data, threadIdx, tableIdx, cIdx, pIdx, index);
+                long[] data = cache.query(tableIdx, cIdx, pIdx);
+                if (data == null) {
+                    data = readFromFile(table, pageSize, tableIdx, cIdx, pIdx);
+                    cache.cache(tableIdx, cIdx, pIdx, data);
                 }
-                Arrays.parallelSort(data);
-                // showData(data);
-                System.out.println("page size:" + pageSize + ", index size:" + index);
                 return data[(int) (rank - offset)];
             }
             offset += pageSize;
@@ -37,29 +36,37 @@ public final class MyPageManager {
         return -1;
     }
 
-    private static int readFromFile(MyTable table, long[] data, int threadIdx, int tIdx, int cIdx, int pIdx, int beginIndex)
-            throws IOException {
-        int index = beginIndex;
-        Path path = Constant.getPath(threadIdx, tIdx, cIdx, pIdx);
-        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
-            MappedByteBuffer buffer = channel.map(
-                    FileChannel.MapMode.READ_ONLY,
-                    0,
-                    (long) table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES
-            );
-            while (buffer.hasRemaining()) {
-                long d = buffer.getLong();
-                data[index++] = d;
-            }
-            buffer.clear();
-            Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
-            if (cleaner != null) {
-                cleaner.clean();
+    private static long[] readFromFile(MyTable table,
+                                       int pageSize,
+                                       int tIdx,
+                                       int cIdx,
+                                       int pIdx) throws IOException {
+        long[] data = new long[pageSize];
+        int index = 0;
+        for (int threadIdx = 0; threadIdx < Constant.THREAD_COUNT; ++threadIdx) {
+            if (table.pageCounts[threadIdx][pIdx][cIdx] == 0) continue;
+            Path path = Constant.getPath(threadIdx, tIdx, cIdx, pIdx);
+            try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+                MappedByteBuffer buffer = channel.map(
+                        FileChannel.MapMode.READ_ONLY,
+                        0,
+                        (long) table.pageCounts[threadIdx][pIdx][cIdx] * Long.BYTES
+                );
+                while (buffer.hasRemaining()) {
+                    long d = buffer.getLong();
+                    data[index++] = d;
+                }
+                buffer.clear();
+                Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
+                if (cleaner != null) {
+                    cleaner.clean();
+                }
             }
         }
-        return index;
+        Arrays.parallelSort(data);
+        System.out.println("page size:" + pageSize + ", index size:" + index);
+        return data;
     }
-
 
     private static int getPageSize(MyTable table, int cIdx, int pIdx) {
         int pageSize = 0;
