@@ -5,7 +5,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public final class MyBlockingQueue {
 
-    private final BlockingQueue<WriteTask> bq = new LinkedBlockingDeque<>(16);
+    private final BlockingQueue<WriteTask> bq = new LinkedBlockingDeque<>(200);
     private int inCont;
     private int outCount;
     public int maxCount;
