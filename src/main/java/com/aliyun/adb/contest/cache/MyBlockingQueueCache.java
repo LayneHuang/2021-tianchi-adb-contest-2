@@ -14,9 +14,13 @@ import java.util.concurrent.LinkedBlockingDeque;
 public final class MyBlockingQueueCache {
 
     private final BlockingQueue<WriteTask> bq = new LinkedBlockingDeque<>(2);
+    private int size;
+    public int maxSize;
 
-    public WriteTask poll()  {
+    public WriteTask poll() {
         try {
+            size--;
+            maxSize = Math.max(maxSize, size);
             return bq.take();
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -24,9 +28,11 @@ public final class MyBlockingQueueCache {
         return null;
     }
 
-    public void put(WriteTask task)  {
+    public void put(WriteTask task) {
         try {
             bq.put(task);
+            size++;
+            maxSize = Math.max(maxSize, size);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
