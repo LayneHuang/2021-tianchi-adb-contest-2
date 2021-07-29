@@ -21,7 +21,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
     private final Map<String, Integer> indexMap = new HashMap<>();
     private static final ReadThread[] rThreads = new ReadThread[Constant.THREAD_COUNT];
     private static final WriteThread[] wThreads = new WriteThread[Constant.THREAD_COUNT];
-    private TableInfoPersistence tableInfoDB = new TableInfoPersistence();
+    private final TableInfoPersistence tableInfoDB = new TableInfoPersistence();
 
     /**
      * The implementation must contain a public no-argument constructor.
@@ -36,6 +36,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
         if (tableInfoDB.readLoaded()) {
             tableInfoDB.loadTableInfo(tables, indexMap);
             System.out.println("SECOND LOAD, COST:" + (System.currentTimeMillis() - t));
+            showMemory();
             return;
         }
         Path dirPath = Paths.get(tpchDataFileDir);
@@ -70,6 +71,15 @@ public class SimpleAnalyticDB implements AnalyticDB {
         System.out.println("CAL PAGE COST TIME : " + (calPageT - readWriteT));
         tableInfoDB.saveTableInfo(tables);
         System.out.println("SAVE INFO COST TIME : " + (System.currentTimeMillis() - calPageT));
+        showMemory();
+    }
+
+    private void showMemory() {
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        long totalMemory = Runtime.getRuntime().totalMemory();
+        System.out.println("SYSTEM MAX MEMORY: " + maxMemory);
+        System.out.println("SYSTEM TOTAL MEMORY: " + totalMemory);
+        System.out.println("SYSTEM REST MEMORY:" + (maxMemory - totalMemory + Runtime.getRuntime().freeMemory()));
     }
 
     private void calTotalSize() {
