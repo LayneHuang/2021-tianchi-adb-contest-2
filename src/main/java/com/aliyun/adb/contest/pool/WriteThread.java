@@ -27,22 +27,26 @@ public class WriteThread extends Thread {
             if (task == null || task.getPath() == null) {
                 break;
             }
-            try (FileChannel fileChannel = FileChannel.open(
-                    task.getPath(),
-                    StandardOpenOption.WRITE,
-                    StandardOpenOption.CREATE,
-                    st.contains(task.getPath().toString()) ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING
-            )) {
-                st.add(task.getPath().toString());
-                trans(task.getData());
-                buffer.flip();
-                fileChannel.write(buffer);
-                buffer.clear();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            // write(task);
         }
         System.out.println("WRITE THREAD Finished, bq max size: " + bq.maxCount);
+    }
+
+    private void write(WriteTask task) {
+        try (FileChannel fileChannel = FileChannel.open(
+                task.getPath(),
+                StandardOpenOption.WRITE,
+                StandardOpenOption.CREATE,
+                st.contains(task.getPath().toString()) ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING
+        )) {
+            st.add(task.getPath().toString());
+            trans(task.getData());
+            buffer.flip();
+            fileChannel.write(buffer);
+            buffer.clear();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void trans(long[] data) {
