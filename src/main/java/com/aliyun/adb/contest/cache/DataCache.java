@@ -35,7 +35,7 @@ public class DataCache {
                         int pIdx) {
         String key = getKey(tIdx, cIdx, pIdx);
         if (!posMap.containsKey(key)) return null;
-        System.out.println("GET FROM CACHE");
+        System.out.println("GET FROM CACHE: " + key);
         int pos = posMap.get(key);
         return cache[pos];
     }

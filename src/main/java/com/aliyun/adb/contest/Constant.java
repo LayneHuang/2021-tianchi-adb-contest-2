@@ -21,7 +21,7 @@ public final class Constant {
     public static final int DATA_COUNT = 1000_000_000;
 
     // CacheSize
-    public static final int CACHE_SIZE = (int) (4L * 1024 * 1024 * 1024 / (DATA_COUNT / PAGE_COUNT * Long.BYTES));
+    public static final int CACHE_SIZE = (int) (6L * 1024 * 1024 * 1024 / (DATA_COUNT / PAGE_COUNT * Long.BYTES));
 
     public static int getPageIndex(int value) {
         int distance = Integer.MAX_VALUE / PAGE_COUNT;
@@ -30,8 +30,6 @@ public final class Constant {
 
     public static int getPageIndex(long value) {
         long distance = Long.MAX_VALUE / PAGE_COUNT;
-        long result = (value / distance);
-        if (result < 0) System.out.println("FUCK: " + value + " " + distance);
         return (int) Math.min(PAGE_COUNT - 1, (value / distance));
     }
 
