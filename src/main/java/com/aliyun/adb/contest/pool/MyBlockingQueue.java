@@ -1,11 +1,13 @@
 package com.aliyun.adb.contest.pool;
 
+import com.aliyun.adb.contest.Constant;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
 public final class MyBlockingQueue {
 
-    private final BlockingQueue<WriteTask> bq = new LinkedBlockingDeque<>(200);
+    private final BlockingQueue<WriteTask> bq = new LinkedBlockingDeque<>(Constant.PAGE_COUNT);
     private int inCont;
     private int outCount;
     public int maxCount;
