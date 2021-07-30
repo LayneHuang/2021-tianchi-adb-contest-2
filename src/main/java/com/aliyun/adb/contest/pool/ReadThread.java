@@ -189,7 +189,7 @@ public class ReadThread extends Thread {
 //                page.copy(),
 //                Constant.getPath(tId, table.index, cIdx, pIdx)
 //        ));
-//        page.size = 0;
+        page.size = 0;
     }
 
     private void finish() {
