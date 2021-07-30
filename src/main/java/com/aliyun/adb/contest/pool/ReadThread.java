@@ -177,12 +177,19 @@ public class ReadThread extends Thread {
         int key = getKey(cIdx, pIdx);
         pages[key].add(input);
         if (pages[key].full()) {
-            bq.put(new WriteTask(
-                    pages[key].copy(),
-                    Constant.getPath(tId, table.index, cIdx, pIdx)
-            ));
-            pages[key].size = 0;
+            submitPage(cIdx, pIdx, pages[key]);
         }
+    }
+
+    /**
+     * 提交到写线程
+     */
+    private void submitPage(int cIdx, int pIdx, MyValuePage page) {
+//        bq.put(new WriteTask(
+//                page.copy(),
+//                Constant.getPath(tId, table.index, cIdx, pIdx)
+//        ));
+//        page.size = 0;
     }
 
     private void finish() {
@@ -228,10 +235,7 @@ public class ReadThread extends Thread {
                 int key = getKey(cIdx, pIdx);
                 table.pageCounts[tId][pIdx][cIdx] += pages[key].dataCount;
                 if (pages[key].size == 0) continue;
-                bq.put(new WriteTask(
-                        pages[key].copy(),
-                        Constant.getPath(tId, table.index, cIdx, pIdx)
-                ));
+                submitPage(cIdx, pIdx, pages[key]);
             }
         }
     }
