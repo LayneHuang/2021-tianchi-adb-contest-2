@@ -48,7 +48,9 @@ public class ReadThread extends Thread {
             initPages();
             readTable();
         }
-        bq.put(new WriteTask());
+        if (bq != null) {
+            bq.put(new WriteTask());
+        }
     }
 
     private void initPages() {
