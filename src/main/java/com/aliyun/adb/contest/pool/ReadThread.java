@@ -208,7 +208,7 @@ public class ReadThread extends Thread {
                 Constant.getPath(tId, table.index, cIdx, pIdx)
         ));
 //        write(Constant.getPath(tId, table.index, cIdx, pIdx), page);
-//        page.clean();
+        page.clean();
     }
 
     private void finish() {
