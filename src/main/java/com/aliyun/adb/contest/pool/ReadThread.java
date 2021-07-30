@@ -87,8 +87,10 @@ public class ReadThread extends Thread {
                         begin,
                         end - begin
                 );
-                noTrans(buffer);
-                // trans(i, table.blocks[bIdx], buffer);
+                // 28S
+                // noTrans(buffer);
+                // 62S
+                trans(i, table.blocks[bIdx], buffer);
                 Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
                 if (cleaner != null) {
                     cleaner.clean();
@@ -194,10 +196,10 @@ public class ReadThread extends Thread {
      * 提交到写线程
      */
     private void submitPage(int cIdx, int pIdx, MyValuePage page) {
-//        bq.put(new WriteTask(
-//                page.copy(),
-//                Constant.getPath(tId, table.index, cIdx, pIdx)
-//        ));
+        bq.put(new WriteTask(
+                page.copy(),
+                Constant.getPath(tId, table.index, cIdx, pIdx)
+        ));
         page.size = 0;
     }
 

@@ -27,7 +27,7 @@ public class WriteThread extends Thread {
             if (task == null || task.getPath() == null) {
                 break;
             }
-            // write(task);
+            write(task);
         }
         System.out.println("WRITE THREAD Finished, bq max size: " + bq.maxCount);
     }
