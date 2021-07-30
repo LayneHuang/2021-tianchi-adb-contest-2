@@ -5,7 +5,7 @@ import java.nio.file.Path;
 public final class Constant {
     public static Path WORK_DIR;
     // 线程数
-    public static final int THREAD_COUNT = 10;
+    public static final int THREAD_COUNT = 16;
     // 每个线程的页数
     public static final int PAGE_COUNT = 1000;
     // 文件页单次写入磁盘的页大小
