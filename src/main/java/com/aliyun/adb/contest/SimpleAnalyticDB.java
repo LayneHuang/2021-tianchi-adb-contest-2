@@ -62,8 +62,9 @@ public class SimpleAnalyticDB implements AnalyticDB {
             rThreads[i] = new ReadThread(i, tables, wThreads[i].bq);
         }
         for (ReadThread thread : rThreads) thread.start();
-        for (WriteThread thread : wThreads) thread.start();
-        for (WriteThread thread : wThreads) thread.join();
+//        for (WriteThread thread : wThreads) thread.start();
+//        for (WriteThread thread : wThreads) thread.join();
+        for (ReadThread thread : rThreads) thread.join();
         long readWriteT = System.currentTimeMillis();
         System.out.println("READ AND WRITE COST TIME : " + (readWriteT - t));
         calTotalSize();
@@ -99,8 +100,8 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
-//        debug++;
-//        if (debug > 500) return "0";
+        debug++;
+        if (debug > 500) return "0";
         int tIdx = indexMap.get(table);
         int colIdx = tables.get(tIdx).colIndexMap.get(column);
         long ans = MyPageManager.find(tables.get(tIdx), tIdx, colIdx, percentile);

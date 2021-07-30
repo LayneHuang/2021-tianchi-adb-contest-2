@@ -2,13 +2,20 @@ package com.aliyun.adb.contest.pool;
 
 import com.aliyun.adb.contest.Constant;
 import com.aliyun.adb.contest.page.MyBlock;
+import com.aliyun.adb.contest.page.MyBufferPage;
+import com.aliyun.adb.contest.page.MyPage;
 import com.aliyun.adb.contest.page.MyTable;
-import com.aliyun.adb.contest.page.MyValuePage;
 import sun.misc.Cleaner;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ReadThread extends Thread {
     /**
@@ -22,7 +29,7 @@ public class ReadThread extends Thread {
 
     private final MyBlockingQueue bq;
 
-    private final MyValuePage[] pages = new MyValuePage[Constant.MAX_COL_COUNT * Constant.PAGE_COUNT];
+    private final MyPage[] pages = new MyBufferPage[Constant.MAX_COL_COUNT * Constant.PAGE_COUNT];
 
     private int blockCountInThread;
 
@@ -49,9 +56,9 @@ public class ReadThread extends Thread {
             for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
                 int key = getKey(cIdx, pIdx);
                 if (pages[key] == null) {
-                    pages[key] = new MyValuePage();
+                    pages[key] = new MyBufferPage();
                 } else {
-                    pages[key].size = 0;
+                    pages[key].clean();
                     pages[key].dataCount = 0;
                 }
             }
@@ -195,12 +202,13 @@ public class ReadThread extends Thread {
     /**
      * 提交到写线程
      */
-    private void submitPage(int cIdx, int pIdx, MyValuePage page) {
-        bq.put(new WriteTask(
-                page.copy(),
-                Constant.getPath(tId, table.index, cIdx, pIdx)
-        ));
-        page.size = 0;
+    private void submitPage(int cIdx, int pIdx, MyPage page) {
+//        bq.put(new WriteTask(
+//                page.copy(),
+//                Constant.getPath(tId, table.index, cIdx, pIdx)
+//        ));
+        write(Constant.getPath(tId, table.index, cIdx, pIdx), page);
+        page.clean();
     }
 
     private void finish() {
@@ -245,7 +253,7 @@ public class ReadThread extends Thread {
             for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
                 int key = getKey(cIdx, pIdx);
                 table.pageCounts[tId][pIdx][cIdx] += pages[key].dataCount;
-                if (pages[key].size == 0) continue;
+                if (pages[key].empty()) continue;
                 submitPage(cIdx, pIdx, pages[key]);
             }
         }
@@ -253,5 +261,24 @@ public class ReadThread extends Thread {
 
     private int getKey(int colIndex, int pageIndex) {
         return colIndex * Constant.PAGE_COUNT + pageIndex;
+    }
+
+    private final Set<String> st = new HashSet<>();
+
+    private void write(Path path, MyPage page) {
+        try (FileChannel fileChannel = FileChannel.open(
+                path,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.CREATE,
+                st.contains(path.toString()) ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING
+        )) {
+            st.add(path.toString());
+            ByteBuffer buffer = (ByteBuffer) page.getData();
+            buffer.flip();
+            fileChannel.write(buffer);
+            buffer.clear();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
