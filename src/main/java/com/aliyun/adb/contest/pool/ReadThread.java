@@ -87,7 +87,7 @@ public class ReadThread extends Thread {
                         begin,
                         end - begin
                 );
-                trans(i, table.blocks[bIdx], buffer);
+                // trans(i, table.blocks[bIdx], buffer);
                 Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
                 if (cleaner != null) {
                     cleaner.clean();
