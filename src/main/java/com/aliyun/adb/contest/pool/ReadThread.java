@@ -1,10 +1,7 @@
 package com.aliyun.adb.contest.pool;
 
 import com.aliyun.adb.contest.Constant;
-import com.aliyun.adb.contest.page.MyBlock;
-import com.aliyun.adb.contest.page.MyBufferPage;
-import com.aliyun.adb.contest.page.MyPage;
-import com.aliyun.adb.contest.page.MyTable;
+import com.aliyun.adb.contest.page.*;
 import sun.misc.Cleaner;
 
 import java.io.IOException;
@@ -29,7 +26,7 @@ public class ReadThread extends Thread {
 
     private final MyBlockingQueue bq;
 
-    private final MyPage[] pages = new MyBufferPage[Constant.MAX_COL_COUNT * Constant.PAGE_COUNT];
+    private final MyPage[] pages = new MyValuePage[Constant.MAX_COL_COUNT * Constant.PAGE_COUNT];
 
     private int blockCountInThread;
 
@@ -58,7 +55,7 @@ public class ReadThread extends Thread {
             for (int pIdx = 0; pIdx < Constant.PAGE_COUNT; ++pIdx) {
                 int key = getKey(cIdx, pIdx);
                 if (pages[key] == null) {
-                    pages[key] = new MyBufferPage();
+                    pages[key] = new MyValuePage();
                 } else {
                     pages[key].clean();
                     pages[key].dataCount = 0;
@@ -205,12 +202,13 @@ public class ReadThread extends Thread {
      * 提交到写线程
      */
     private void submitPage(int cIdx, int pIdx, MyPage page) {
-//        bq.put(new WriteTask(
-//                page.copy(),
-//                Constant.getPath(tId, table.index, cIdx, pIdx)
-//        ));
-        write(Constant.getPath(tId, table.index, cIdx, pIdx), page);
-        page.clean();
+        MyValuePage valuePage = (MyValuePage) page;
+        bq.put(new WriteTask(
+                valuePage.copy(),
+                Constant.getPath(tId, table.index, cIdx, pIdx)
+        ));
+//        write(Constant.getPath(tId, table.index, cIdx, pIdx), page);
+//        page.clean();
     }
 
     private void finish() {

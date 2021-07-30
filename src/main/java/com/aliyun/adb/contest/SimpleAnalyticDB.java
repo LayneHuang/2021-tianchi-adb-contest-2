@@ -20,7 +20,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
     private final List<MyTable> tables = new ArrayList<>();
     private final Map<String, Integer> indexMap = new HashMap<>();
     private static final ReadThread[] rThreads = new ReadThread[Constant.THREAD_COUNT];
-    //    private static final WriteThread[] wThreads = new WriteThread[Constant.THREAD_COUNT];
+    private static final WriteThread[] wThreads = new WriteThread[Constant.THREAD_COUNT];
     private final TableInfoPersistence tableInfoDB = new TableInfoPersistence();
 
     /**
@@ -58,14 +58,14 @@ public class SimpleAnalyticDB implements AnalyticDB {
         }
         System.out.println("table count: " + tables.size());
         for (int i = 0; i < Constant.THREAD_COUNT; ++i) {
-//            wThreads[i] = new WriteThread();
-//            rThreads[i] = new ReadThread(i, tables, wThreads[i].bq);
-            rThreads[i] = new ReadThread(i, tables, null);
+            wThreads[i] = new WriteThread();
+            rThreads[i] = new ReadThread(i, tables, wThreads[i].bq);
+//            rThreads[i] = new ReadThread(i, tables, null);
         }
         for (ReadThread thread : rThreads) thread.start();
-//        for (WriteThread thread : wThreads) thread.start();
-//        for (WriteThread thread : wThreads) thread.join();
-        for (ReadThread thread : rThreads) thread.join();
+        for (WriteThread thread : wThreads) thread.start();
+        for (WriteThread thread : wThreads) thread.join();
+//        for (ReadThread thread : rThreads) thread.join();
         long readWriteT = System.currentTimeMillis();
         System.out.println("READ AND WRITE COST TIME : " + (readWriteT - t));
         calTotalSize();
