@@ -27,12 +27,15 @@ public class MyTable {
 
     public AtomicInteger readCount = new AtomicInteger(0);
 
-    public synchronized void initBlocks(int blockCount) {
+    public void initBlocks(int blockCount) {
         if (this.blockCount > 0) return;
-        this.blockCount = blockCount;
-        blocks = new MyBlock[blockCount];
-        for (int i = 0; i < blockCount; ++i) {
-            blocks[i] = new MyBlock();
+        synchronized (this) {
+            if (this.blockCount > 0) return;
+            blocks = new MyBlock[blockCount];
+            for (int i = 0; i < blockCount; ++i) {
+                blocks[i] = new MyBlock();
+            }
+            this.blockCount = blockCount;
         }
     }
 }
