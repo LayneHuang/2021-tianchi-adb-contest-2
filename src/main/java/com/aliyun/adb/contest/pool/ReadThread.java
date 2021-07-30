@@ -87,6 +87,7 @@ public class ReadThread extends Thread {
                         begin,
                         end - begin
                 );
+                noTrans(buffer);
                 // trans(i, table.blocks[bIdx], buffer);
                 Cleaner cleaner = ((sun.nio.ch.DirectBuffer) buffer).cleaner();
                 if (cleaner != null) {
@@ -97,6 +98,14 @@ public class ReadThread extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void noTrans(MappedByteBuffer buffer) {
+        long sum = 0;
+        while (buffer.hasRemaining()) {
+            sum += sum * 10 + (buffer.get() - 48);
+        }
+        System.out.println("sum: " + sum);
     }
 
     private void trans(int bIdxInThread, MyBlock block, MappedByteBuffer buffer) {
