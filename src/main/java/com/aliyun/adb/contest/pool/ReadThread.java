@@ -216,9 +216,9 @@ public class ReadThread extends Thread {
 
     private void putData(int cIdx) {
         if (input == 0) return;
-        long t1 = System.nanoTime();
         int pIdx = Constant.getPageIndex(input);
         int key = getKey(cIdx, pIdx);
+        long t1 = System.nanoTime();
         pages[key].add(input);
         long t2 = System.nanoTime();
         divPageT += t2 - t1;
