@@ -79,7 +79,7 @@ public class ReadThread extends Thread {
                 return;
             }
             table.initBlocks(DEFAULT_BLOCK_COUNT);
-            System.out.println("DEFAULT_BLOCK_COUNT: " + DEFAULT_BLOCK_COUNT + ", BLOCK_PER_THREAD: " + BLOCK_PER_THREAD + ", beginBIdx: " + beginBIdx + ", endIndex: " + endBIdx);
+//            System.out.println("DEFAULT_BLOCK_COUNT: " + DEFAULT_BLOCK_COUNT + ", BLOCK_PER_THREAD: " + BLOCK_PER_THREAD + ", beginBIdx: " + beginBIdx + ", endIndex: " + endBIdx);
             blockCountInThread = endBIdx - beginBIdx;
 
             for (int i = 0; i < blockCountInThread; ++i) {
@@ -104,10 +104,10 @@ public class ReadThread extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("transBeginT: " + (transBeginT / 1000000)
-                + "(ms), transT: " + (transT / 1000000)
-                + "(ms), divPageT: " + (divPageT / 1000000)
-                + "(ms), submitT: " + (submitT / 1000000) + "(ms)");
+//        System.out.println("transBeginT: " + (transBeginT / 1000000)
+//                + "(ms), transT: " + (transT / 1000000)
+//                + "(ms), divPageT: " + (divPageT / 1000000)
+//                + "(ms), submitT: " + (submitT / 1000000) + "(ms)");
     }
 
     private void noTrans(MappedByteBuffer buffer) {
@@ -118,36 +118,36 @@ public class ReadThread extends Thread {
         System.out.println("sum: " + sum);
     }
 
-    private long transBeginT = 0;
-    /**
-     * 转换耗时
-     */
-    private long transT = 0;
-    /**
-     * 分页耗时
-     */
-    private long divPageT = 0;
-    /**
-     * 提交耗时
-     */
-    private long submitT = 0;
+//    private long transBeginT = 0;
+//    /**
+//     * 转换耗时
+//     */
+//    private long transT = 0;
+//    /**
+//     * 分页耗时
+//     */
+//    private long divPageT = 0;
+//    /**
+//     * 提交耗时
+//     */
+//    private long submitT = 0;
 
     private void trans(int bIdxInThread, MyBlock block, MappedByteBuffer buffer) {
         initCur();
-        long t1 = System.nanoTime();
+//        long t1 = System.nanoTime();
         if (tId == 0 && bIdxInThread == 0) {
             handleColName(buffer);
         } else {
             handleBeginBytes(block, buffer);
         }
-        long t2 = System.nanoTime();
-        transBeginT += t2 - t1;
+//        long t2 = System.nanoTime();
+//        transBeginT += t2 - t1;
         while (buffer.hasRemaining()) {
             handleByte(buffer.get());
         }
         setCurToBlock(block);
-        long t3 = System.nanoTime();
-        transT += t3 - t2;
+//        long t3 = System.nanoTime();
+//        transT += t3 - t2;
     }
 
     /**
@@ -218,14 +218,14 @@ public class ReadThread extends Thread {
         if (input == 0) return;
         int pIdx = Constant.getPageIndex(input);
         int key = getKey(cIdx, pIdx);
-        long t1 = System.nanoTime();
+//        long t1 = System.nanoTime();
         pages[key].add(input);
-        long t2 = System.nanoTime();
-        divPageT += t2 - t1;
+//        long t2 = System.nanoTime();
+//        divPageT += t2 - t1;
         if (pages[key].full()) {
             submitPage(cIdx, pIdx, pages[key]);
         }
-        submitT += System.nanoTime() - t2;
+//        submitT += System.nanoTime() - t2;
     }
 
     /**

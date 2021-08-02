@@ -64,7 +64,7 @@ public final class MyPageManager {
             }
         }
         Arrays.parallelSort(data);
-        System.out.println("page size:" + pageSize + ", index size:" + index);
+//        System.out.println("page size:" + pageSize + ", index size:" + index);
         return data;
     }
 

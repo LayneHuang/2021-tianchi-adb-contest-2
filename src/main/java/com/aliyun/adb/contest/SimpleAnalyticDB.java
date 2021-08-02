@@ -31,12 +31,12 @@ public class SimpleAnalyticDB implements AnalyticDB {
 
     @Override
     public void load(String tpchDataFileDir, String workspaceDir) throws Exception {
-        long t = System.currentTimeMillis();
+//        long t = System.currentTimeMillis();
         Constant.WORK_DIR = Paths.get(workspaceDir);
         if (tableInfoDB.readLoaded()) {
             tableInfoDB.loadTableInfo(tables, indexMap);
-            System.out.println("SECOND LOAD, COST:" + (System.currentTimeMillis() - t));
-            showMemory();
+//            System.out.println("SECOND LOAD, COST:" + (System.currentTimeMillis() - t));
+//            showMemory();
             return;
         }
         Path dirPath = Paths.get(tpchDataFileDir);
@@ -56,7 +56,7 @@ public class SimpleAnalyticDB implements AnalyticDB {
             indexMap.put(table.name, tableIndex);
             tableIndex++;
         }
-        System.out.println("table count: " + tables.size());
+        // System.out.println("table count: " + tables.size());
         for (int i = 0; i < Constant.THREAD_COUNT; ++i) {
             wThreads[i] = new WriteThread();
             rThreads[i] = new ReadThread(i, tables, wThreads[i].bq);
@@ -66,14 +66,14 @@ public class SimpleAnalyticDB implements AnalyticDB {
         for (WriteThread thread : wThreads) thread.start();
         for (WriteThread thread : wThreads) thread.join();
 //        for (ReadThread thread : rThreads) thread.join();
-        long readWriteT = System.currentTimeMillis();
-        System.out.println("READ AND WRITE COST TIME : " + (readWriteT - t));
+//        long readWriteT = System.currentTimeMillis();
+//        System.out.println("READ AND WRITE COST TIME : " + (readWriteT - t));
         calTotalSize();
-        long calPageT = System.currentTimeMillis();
-        System.out.println("CAL PAGE COST TIME : " + (calPageT - readWriteT));
+//        long calPageT = System.currentTimeMillis();
+//        System.out.println("CAL PAGE COST TIME : " + (calPageT - readWriteT));
         tableInfoDB.saveTableInfo(tables);
-        System.out.println("SAVE INFO COST TIME : " + (System.currentTimeMillis() - calPageT));
-        showMemory();
+//        System.out.println("SAVE INFO COST TIME : " + (System.currentTimeMillis() - calPageT));
+//        showMemory();
     }
 
     private void showMemory() {
@@ -93,20 +93,20 @@ public class SimpleAnalyticDB implements AnalyticDB {
                 }
             }
             table.dataCount = cnt;
-            System.out.println("table: " + cnt);
+//            System.out.println("table: " + cnt);
         }
     }
 
-    private int debug = 0;
+//    private int debug = 0;
 
     @Override
     public String quantile(String table, String column, double percentile) throws IOException {
-        debug++;
-        if (debug > 500) return "0";
+//        debug++;
+//        if (debug > 500) return "0";
         int tIdx = indexMap.get(table);
         int colIdx = tables.get(tIdx).colIndexMap.get(column);
         long ans = MyPageManager.find(tables.get(tIdx), tIdx, colIdx, percentile);
-        System.out.println("query: " + table + ", column: " + column + ", percentile:" + percentile + ", ans:" + ans);
+//        System.out.println("query: " + table + ", column: " + column + ", percentile:" + percentile + ", ans:" + ans);
         return String.valueOf(ans);
     }
 
