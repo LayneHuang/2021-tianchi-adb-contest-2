@@ -104,10 +104,10 @@ public class ReadThread extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("transBeginT: " + (transBeginT / 1000)
-                + "(ms), transT: " + (transT / 1000)
-                + "(ms), divPageT: " + (divPageT / 1000)
-                + "(ms), submitT: " + (submitT / 1000) + "(ms)");
+        System.out.println("transBeginT: " + (transBeginT / 1000000)
+                + "(ms), transT: " + (transT / 1000000)
+                + "(ms), divPageT: " + (divPageT / 1000000)
+                + "(ms), submitT: " + (submitT / 1000000) + "(ms)");
     }
 
     private void noTrans(MappedByteBuffer buffer) {
