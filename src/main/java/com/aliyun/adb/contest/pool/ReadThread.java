@@ -104,10 +104,10 @@ public class ReadThread extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("块开头转换耗时: " + (transBeginT / 1000.0)
-                + "(ms), 转换耗时: " + (transT / 1000.0)
-                + "(ms), 分页耗时: " + (divPageT / 1000.0)
-                + "(ms), 提交到队列并发耗时: " + (submitT / 1000.0) + "(ms)");
+        System.out.println("transBeginT: " + (transBeginT / 1000.0)
+                + "(ms), transT: " + (transT / 1000.0)
+                + "(ms), divPageT: " + (divPageT / 1000.0)
+                + "(ms), submitT: " + (submitT / 1000.0) + "(ms)");
     }
 
     private void noTrans(MappedByteBuffer buffer) {
