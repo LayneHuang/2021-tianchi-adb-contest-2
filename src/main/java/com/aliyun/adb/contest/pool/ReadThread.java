@@ -1,18 +1,16 @@
 package com.aliyun.adb.contest.pool;
 
 import com.aliyun.adb.contest.Constant;
-import com.aliyun.adb.contest.page.*;
+import com.aliyun.adb.contest.page.MyBlock;
+import com.aliyun.adb.contest.page.MyPage;
+import com.aliyun.adb.contest.page.MyTable;
+import com.aliyun.adb.contest.page.MyValuePage;
 import sun.misc.Cleaner;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class ReadThread extends Thread {
     /**
@@ -106,6 +104,10 @@ public class ReadThread extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        System.out.println("块开头转换耗时: " + (transBeginT / 1000.0)
+                + "(ms), 转换耗时: " + (transT / 1000.0)
+                + "(ms), 分页耗时: " + (divPageT / 1000.0)
+                + "(ms), 提交到队列并发耗时: " + (submitT / 1000.0) + "(ms)");
     }
 
     private void noTrans(MappedByteBuffer buffer) {
@@ -116,73 +118,97 @@ public class ReadThread extends Thread {
         System.out.println("sum: " + sum);
     }
 
+    private long transBeginT = 0;
+    /**
+     * 转换耗时
+     */
+    private long transT = 0;
+    /**
+     * 分页耗时
+     */
+    private long divPageT = 0;
+    /**
+     * 提交耗时
+     */
+    private long submitT = 0;
+
     private void trans(int bIdxInThread, MyBlock block, MappedByteBuffer buffer) {
         initCur();
-        byte b;
+        long t1 = System.nanoTime();
         if (tId == 0 && bIdxInThread == 0) {
-            StringBuilder colName = new StringBuilder();
-            while (buffer.hasRemaining()) {
-                b = buffer.get();
-                // 去除文件头的列名
-                if (b == 10) {
-                    String[] names = colName.toString().split(",");
-                    for (int i = 0; i < names.length; ++i) {
-                        table.colIndexMap.put(names[i], i);
-                    }
-                    break;
-                } else {
-                    if (b == 13) continue;
-                    colName.append((char) b);
-                }
-            }
+            handleColName(buffer);
         } else {
-            long num = 0;
-            int firstLen = 0;
-            while (buffer.hasRemaining()) {
-                b = buffer.get();
-                if (b >= 48 && b < 58) {
-                    num = num * 10 + b - 48;
-                    firstLen++;
-                    continue;
-                }
-                if (block.beginLen == 0) block.firstNumLen = firstLen;
-                block.begins[block.beginLen++] = num;
-                num = 0;
-                if (b == 10 || b == 13) {
-                    break;
-                }
-            }
+            handleBeginBytes(block, buffer);
         }
+        long t2 = System.nanoTime();
+        transBeginT += t2 - t1;
         while (buffer.hasRemaining()) {
-            b = buffer.get();
-            handleByte(b);
+            handleByte(buffer.get());
         }
         setCurToBlock(block);
+        long t3 = System.nanoTime();
+        transT += t3 - t2;
+    }
+
+    /**
+     * 处理列名
+     */
+    private void handleColName(ByteBuffer buffer) {
+        StringBuilder colName = new StringBuilder();
+        while (buffer.hasRemaining()) {
+            byte b = buffer.get();
+            // 去除文件头的列名
+            if (b == 10) {
+                String[] names = colName.toString().split(",");
+                for (int i = 0; i < names.length; ++i) {
+                    table.colIndexMap.put(names[i], i);
+                }
+                break;
+            } else {
+                if (b == 13) continue;
+                colName.append((char) b);
+            }
+        }
+    }
+
+    /**
+     * 处理块开头不完整部分
+     */
+    private void handleBeginBytes(MyBlock block, ByteBuffer buffer) {
+        long num = 0;
+        int firstLen = 0;
+        while (buffer.hasRemaining()) {
+            byte b = buffer.get();
+            if (b >= 48 && b < 58) {
+                num = num * 10 + b - 48;
+                firstLen++;
+                continue;
+            }
+            if (block.beginLen == 0) block.firstNumLen = firstLen;
+            block.begins[block.beginLen++] = num;
+            num = 0;
+            if (b == 10 || b == 13) {
+                break;
+            }
+        }
     }
 
     private long input;
     private int nowColIndex;
-    private int maxDataLen;
 
     private void initCur() {
         input = 0;
         nowColIndex = 0;
-        maxDataLen = 0;
     }
 
     private void handleByte(byte b) {
         if (b >= 48) {
             input = input * 10 + b - 48;
-            maxDataLen++;
         } else if (b == 46) {
             // 小数点
             System.out.println("HAS DOUBLE!!!");
-            maxDataLen = 0;
         } else {
-            if (maxDataLen > 0) {
-                putData(nowColIndex);
-            }
-            maxDataLen = 0;
+            putData(nowColIndex);
             nowColIndex = (b == 44) ? (nowColIndex + 1) : 0;
             input = 0;
         }
@@ -190,12 +216,16 @@ public class ReadThread extends Thread {
 
     private void putData(int cIdx) {
         if (input == 0) return;
+        long t1 = System.nanoTime();
         int pIdx = Constant.getPageIndex(input);
         int key = getKey(cIdx, pIdx);
         pages[key].add(input);
+        long t2 = System.nanoTime();
+        divPageT += t2 - t1;
         if (pages[key].full()) {
             submitPage(cIdx, pIdx, pages[key]);
         }
+        submitT += System.nanoTime() - t2;
     }
 
     /**
@@ -261,24 +291,5 @@ public class ReadThread extends Thread {
 
     private int getKey(int colIndex, int pageIndex) {
         return colIndex * Constant.PAGE_COUNT + pageIndex;
-    }
-
-    private final Set<String> st = new HashSet<>();
-
-    private void write(Path path, MyPage page) {
-        try (FileChannel fileChannel = FileChannel.open(
-                path,
-                StandardOpenOption.WRITE,
-                StandardOpenOption.CREATE,
-                st.contains(path.toString()) ? StandardOpenOption.APPEND : StandardOpenOption.TRUNCATE_EXISTING
-        )) {
-            st.add(path.toString());
-            ByteBuffer buffer = (ByteBuffer) page.getData();
-            buffer.flip();
-            fileChannel.write(buffer);
-            buffer.clear();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
