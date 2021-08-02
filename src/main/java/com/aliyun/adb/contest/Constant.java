@@ -23,19 +23,10 @@ public final class Constant {
     // CacheSize
     public static final int CACHE_SIZE = (int) ((long) (6.5 * 1024L * 1024 * 1024) / (DATA_COUNT / PAGE_COUNT * Long.BYTES));
 
-    public static int getPageIndex(int value) {
-        int distance = Integer.MAX_VALUE / PAGE_COUNT;
-        return Math.min(PAGE_COUNT - 1, value / distance);
-    }
+    public static final long DISTANCE = Long.MAX_VALUE / PAGE_COUNT;
 
     public static int getPageIndex(long value) {
-        long distance = Long.MAX_VALUE / PAGE_COUNT;
-        return (int) Math.min(PAGE_COUNT - 1, (value / distance));
-    }
-
-    public static int getPageIndex(double value) {
-        double distance = Double.MAX_VALUE / PAGE_COUNT;
-        return (int) Math.min(PAGE_COUNT - 1, (value / distance));
+        return (int) Math.min(PAGE_COUNT - 1, (value / DISTANCE));
     }
 
     public static Path getGlobalPath() {
