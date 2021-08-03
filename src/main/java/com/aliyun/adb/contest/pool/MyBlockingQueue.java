@@ -7,7 +7,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public final class MyBlockingQueue {
 
-    private final BlockingQueue<WriteTask> bq = new LinkedBlockingDeque<>(Constant.PAGE_COUNT);
+    private final BlockingQueue<WriteTask> bq = new LinkedBlockingDeque<>(Constant.PAGE_COUNT * Constant.THREAD_COUNT);
 
     public WriteTask poll() {
         try {
